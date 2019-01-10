@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"time"
@@ -57,7 +58,13 @@ func (d *DB) runSqlite3(row *sql.Row, r *revision.Revision, dir revision.Directi
 			return errors.New("already ran revision " + r.ID)
 		}
 
-		if !checksum(r.Hash, []byte(scanned.hash)) {
+		b, err := hex.DecodeString(scanned.hash)
+
+		if err != nil {
+			return err
+		}
+
+		if !checksum(r.Hash, b) {
 			return errors.New("revision checksum failed")
 		}
 	}
