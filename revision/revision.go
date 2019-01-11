@@ -79,6 +79,10 @@ func Add(msg string) (*Revision, error) {
 	return r, err
 }
 
+func Find(id string) (*Revision, error) {
+	return resolveFromPath(filepath.Join(config.RevisionsDir, id + ".sql"))
+}
+
 func Oldest() ([]*Revision, error) {
 	return walk(append_)
 }

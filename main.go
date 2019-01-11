@@ -23,12 +23,7 @@ func main() {
 		Argument: true,
 	})
 
-	runCmd := c.Command("run", cmd.Run)
-
-	runCmd.AddFlag(&cli.Flag{
-		Name: "down",
-		Long: "--down",
-	})
+	c.Command("run", cmd.Run)
 
 	if err := c.Run(os.Args[1:]); err != nil {
 		util.ExitError("", err)

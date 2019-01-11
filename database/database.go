@@ -18,7 +18,11 @@ const (
 	MySQL
 )
 
-var ErrInitialized = errors.New("database already initialized")
+var (
+	ErrInitialized    = errors.New("database already initialized")
+	ErrAlreadyRan     = errors.New("already ran revision")
+	ErrChecksumFailed = errors.New("revision checksum failed")
+)
 
 type Type uint32
 

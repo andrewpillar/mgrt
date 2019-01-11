@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/andrewpillar/cli"
 
 	"github.com/andrewpillar/mgrt/config"
@@ -34,25 +36,52 @@ func Run(c cli.Command) {
 		util.ExitError("failed to initialize database", err)
 	}
 
-	revisions, err := revision.Oldest()
+	var revisions []*revision.Revision
+
+	if len(c.Args) == 0 {
+		revisions, err = revision.Oldest()
+	} else {
+		for _, id := range c.Args {
+			r, err := revision.Find(id)
+
+			if err != nil {
+				continue
+			}
+
+			revisions = append(revisions, r)
+		}
+	}
 
 	if err != nil {
 		util.ExitError("failed to load revisions", err)
 	}
 
-	direction := revision.Up
-
-	if c.Flags.IsSet("down") {
-		direction = revision.Down
-	}
-
 	for _, r := range revisions {
-		if err := db.Run(r, direction); err != nil {
-			util.ExitError("failed to run revision", err)
+		if err := db.Run(r, revision.Up); err != nil {
+			if err != database.ErrAlreadyRan && err != database.ErrChecksumFailed {
+				util.ExitError("failed to run revision", err)
+			}
+
+			fmt.Printf("[ WARN ] %s: %s", err, r.ID)
+
+			if r.Message != "" {
+				fmt.Printf(": %s", r.Message)
+			}
+
+			fmt.Printf("\n")
+			continue
 		}
 
-		if err := db.Log(r, direction); err != nil {
+		if err := db.Log(r, revision.Up); err != nil {
 			util.ExitError("failed to log revision", err)
 		}
+
+		fmt.Printf("[  OK  ] ran revision: %s", r.ID)
+
+		if r.Message != "" {
+			fmt.Printf(": %s", r.Message)
+		}
+
+		fmt.Printf("\n")
 	}
 }
