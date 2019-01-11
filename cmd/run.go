@@ -62,7 +62,13 @@ func Run(c cli.Command) {
 				util.ExitError("failed to run revision", err)
 			}
 
-			fmt.Printf("[ WARN ] %s: %s", err, r.ID)
+			if err == database.ErrChecksumFailed {
+				fmt.Printf("[ FAIL ]")
+			} else {
+				fmt.Printf("[ WARN ]")
+			}
+
+			fmt.Printf(" %s: %s", err, r.ID)
 
 			if r.Message != "" {
 				fmt.Printf(": %s", r.Message)
