@@ -78,7 +78,9 @@ func perform(c cli.Command, d revision.Direction) {
 	}
 
 	for _, r := range revisions {
-		if err := db.Perform(r, d); err != nil {
+		r.Direction = d
+
+		if err := db.Perform(r); err != nil {
 			if err != database.ErrAlreadyPerformed && err != database.ErrChecksumFailed {
 				util.ExitError("failed to perform revision", err)
 			}
@@ -93,7 +95,7 @@ func perform(c cli.Command, d revision.Direction) {
 			continue
 		}
 
-		if err := db.Log(r, d); err != nil {
+		if err := db.Log(r); err != nil {
 			util.ExitError("failed to log revision", err)
 		}
 
