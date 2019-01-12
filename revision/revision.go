@@ -15,13 +15,8 @@ import (
 	"github.com/andrewpillar/mgrt/config"
 )
 
-const (
-	Up Direction	= iota
-	Down
-)
-
 var (
-	stubf = `-- mgrt: revision: %s: %s
+	stubf = `-- mgrt: revision: %d: %s
 -- mgrt: up
 
 -- mgrt: down
@@ -42,12 +37,11 @@ type appendFunc func(revisions []*Revision, r *Revision) []*Revision
 type errMalformedRevision struct {
 	file string
 	line int
+	err  error
 }
 
-type Direction uint32
-
 type Revision struct {
-	ID      string
+	ID      int64
 	Message string
 	Up      string
 	Down    string
@@ -56,9 +50,9 @@ type Revision struct {
 }
 
 func Add(msg string) (*Revision, error) {
-	id := strconv.FormatInt(time.Now().Unix(), 10)
+	id := time.Now().Unix()
 
-	path := filepath.Join(config.RevisionsDir, id + ".sql")
+	path := filepath.Join(config.RevisionsDir, strconv.FormatInt(id, 10) + ".sql")
 
 	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY, config.FileMode)
 
@@ -118,13 +112,24 @@ func resolveFromPath(path string) (*Revision, error) {
 				return nil, &errMalformedRevision{
 					file: path,
 					line: i,
+					err:  errors.New("expected directive"),
 				}
 			}
 
 			directive = strings.TrimPrefix(parts[1], " ")
 
 			if directive == "revision" {
-				r.ID = strings.TrimPrefix(parts[2], " ")
+				id, err := strconv.ParseInt(strings.TrimPrefix(parts[2], " "), 10, 64)
+
+				if err != nil {
+					return nil, &errMalformedRevision{
+						file: path,
+						line: i,
+						err:  err,
+					}
+				}
+
+				r.ID = id
 
 				if l == 4 {
 					r.Message = strings.TrimPrefix(parts[3], " ")
@@ -191,36 +196,5 @@ func walk(f appendFunc) ([]*Revision, error) {
 }
 
 func (e *errMalformedRevision) Error() string {
-	return fmt.Sprintf("malformed revision: %s:%d", e.file, e.line)
-}
-
-func (d Direction) String() string {
-	switch d {
-		case Up:
-			return "up"
-		case Down:
-			return "down"
-		default:
-			return ""
-	}
-}
-
-func (d *Direction) Scan(src interface{}) error {
-	s, ok := src.(string)
-
-	if !ok {
-		return errors.New("failed to scan direction type: could not type assert to string")
-	}
-
-	if s == "up" {
-		(*d) = Up
-		return nil
-	}
-
-	if s == "down" {
-		(*d) = Down
-		return nil
-	}
-
-	return errors.New("failed to scan direction type: unknown direction: " + s)
+	return fmt.Sprintf("malformed revision: %s:%d: %s", e.file, e.line, e.err)
 }
