@@ -11,6 +11,7 @@ import (
 	"github.com/andrewpillar/mgrt/config"
 	"github.com/andrewpillar/mgrt/revision"
 
+	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -27,6 +28,7 @@ var (
 	ErrChecksumFailed   = errors.New("revision checksum failed")
 
 	postgresSource = "host=%s port=%s user=%s dbname=%s password=%s sslmode=disable"
+	mysqlSource    = "%s:%s@%s/%s"
 )
 
 type Type uint32
@@ -60,6 +62,12 @@ func Open(cfg *config.Config) (*DB, error) {
 			db, err = sql.Open(cfg.Type, source)
 			typ = Postgres
 			break
+		case "mysql":
+			source := fmt.Sprintf(mysqlSource, cfg.Username, cfg.Password, cfg.Address, cfg.Database)
+
+			db, err = sql.Open(cfg.Type, source)
+			typ = MySQL
+			break
 		default:
 			err = errors.New("unknown database type " + cfg.Type)
 			break
@@ -77,6 +85,8 @@ func (db *DB) Init() error {
 			return db.initSqlite3()
 		case Postgres:
 			return db.initPostgres()
+		case MySQL:
+			return db.initMysql()
 		default:
 			return errors.New("unknown database type")
 	}
