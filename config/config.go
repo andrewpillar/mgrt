@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 
@@ -56,8 +57,16 @@ type Config struct {
 
 func Initialized() error {
 	for _, f := range []string{RootDir, file, RevisionsDir} {
-		if _, err := os.Stat(f); err != nil {
+		info, err := os.Stat(f)
+
+		if err != nil {
 			return err
+		}
+
+		if f == RootDir || f == RevisionsDir {
+			if !info.IsDir() {
+				return errors.New("not a directort " + f)
+			}
 		}
 	}
 
