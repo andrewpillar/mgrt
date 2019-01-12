@@ -78,12 +78,12 @@ func perform(c cli.Command, d revision.Direction) {
 	}
 
 	for _, r := range revisions {
-		if err := db.Run(r, d); err != nil {
+		if err := db.Perform(r, d); err != nil {
 			if err != database.ErrAlreadyRan && err != database.ErrChecksumFailed {
 				util.ExitError("failed to perform revision", err)
 			}
 
-			fmt.Printf("%s - %s: %s", d, err, r.ID)
+			fmt.Printf("%s - %s: %d", d, err, r.ID)
 
 			if r.Message != "" {
 				fmt.Printf(": %s", r.Message)
@@ -97,7 +97,7 @@ func perform(c cli.Command, d revision.Direction) {
 			util.ExitError("failed to log revision", err)
 		}
 
-		fmt.Printf("%s - performed revision: %s", d, r.ID)
+		fmt.Printf("%s - performed revision: %d", d, r.ID)
 
 		if r.Message != "" {
 			fmt.Printf(": %s", r.Message)
