@@ -1,5 +1,7 @@
 package database
 
+import "strings"
+
 func (db *DB) initPostgres() error {
 	_, err := db.Exec(`
 		CREATE TABLE mgrt_revisions (
@@ -10,8 +12,8 @@ func (db *DB) initPostgres() error {
 		);
 	`)
 
-	if err != nil {
-
+	if err != nil && strings.Contains(err.Error(), "already exists") {
+		return ErrInitialized
 	}
 
 	return nil
