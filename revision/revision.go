@@ -41,12 +41,15 @@ type errMalformedRevision struct {
 }
 
 type Revision struct {
-	ID      int64
-	Message string
-	Up      string
-	Down    string
-	Hash    [sha256.Size]byte
-	Path    string
+	up   string
+	down string
+
+	ID        int64
+	Message   string
+	Hash      [sha256.Size]byte
+	Direction Direction
+	CreatedAt *time.Time
+	Path      string
 }
 
 func Add(msg string) (*Revision, error) {
@@ -161,8 +164,8 @@ func resolveFromPath(path string) (*Revision, error) {
 		}
 	}
 
-	r.Up = up.String()
-	r.Down = down.String()
+	r.up = up.String()
+	r.down = down.String()
 	r.Hash = sha256.Sum256(hash.Bytes())
 
 	return r, nil
@@ -197,4 +200,32 @@ func walk(f appendFunc) ([]*Revision, error) {
 
 func (e *errMalformedRevision) Error() string {
 	return fmt.Sprintf("malformed revision: %s:%d: %s", e.file, e.line, e.err)
+}
+
+// Revisions returned from the database log will not have the Message, up, or down properties
+// populated. The Load method will populate these properties by looking up the revision on the
+// filesystem.
+func (r *Revision) Load() error {
+	realrev, err := Find(strconv.FormatInt(r.ID, 10))
+
+	if err != nil {
+		return err
+	}
+
+	r.Message = realrev.Message
+	r.up = realrev.up
+	r.down = realrev.down
+
+	return nil
+}
+
+func (r *Revision) Query() string {
+	switch r.Direction {
+		case Up:
+			return r.up
+		case Down:
+			return r.down
+		default:
+			return ""
+	}
 }
