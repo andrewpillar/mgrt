@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	stubf = `-- mgrt: revision: %d: %s
+	stub = `-- mgrt: revision: %d: %s
 -- mgrt: up
 
 -- mgrt: down
@@ -71,7 +71,7 @@ func Add(msg string) (*Revision, error) {
 		Path:    path,
 	}
 
-	_, err = fmt.Fprintf(f, stubf, r.ID, r.Message)
+	_, err = fmt.Fprintf(f, stub, r.ID, r.Message)
 
 	return r, err
 }
