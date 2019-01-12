@@ -1,10 +1,10 @@
 package database
 
 import (
-	"crypto/sha256"
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/andrewpillar/mgrt/config"
@@ -34,20 +34,6 @@ type DB struct {
 	table string
 
 	Type Type
-}
-
-func checksum(a [sha256.Size]byte, b []byte) bool {
-	if len(b) != sha256.Size {
-		return false
-	}
-
-	for i := 0; i < sha256.Size; i++ {
-		if a[i] != b[i] {
-			return false
-		}
-	}
-
-	return true
 }
 
 func Open(cfg *config.Config) (*DB, error) {
@@ -82,7 +68,7 @@ func (db *DB) Init() error {
 	}
 }
 
-func (db *DB) Log(r *revision.Revision, d revision.Direction) error {
+func (db *DB) Log(r *revision.Revision) error {
 	query := fmt.Sprintf(`
 		INSERT INTO %s (id, hash, direction, created_at)
 		VALUES ($1, $2, $3, $4)
@@ -102,12 +88,66 @@ func (db *DB) Log(r *revision.Revision, d revision.Direction) error {
 		blob[i] = b
 	}
 
-	_, err = stmt.Exec(r.ID, blob, d, time.Now())
+	_, err = stmt.Exec(r.ID, blob, r.Direction, time.Now())
 
 	return err
 }
 
-func (db *DB) Perform(r *revision.Revision, d revision.Direction) error {
+func (db *DB) ReadLog(ids ...string) ([]*revision.Revision, error) {
+	query := "SELECT id, hash, direction, created_at FROM " + db.table
+
+	if len(ids) > 0 {
+		query += " WHERE id IN (" + strings.Join(ids, ", ") + ")"
+	}
+
+	query += " ORDER BY created_at DESC"
+
+	stmt, err := db.Prepare(query)
+
+	if err != nil {
+		return []*revision.Revision{}, err
+	}
+
+	defer stmt.Close()
+
+	rows, err := stmt.Query()
+
+	if err != nil && err != sql.ErrNoRows {
+		return []*revision.Revision{}, err
+	}
+
+	revisions := make([]*revision.Revision, 0)
+
+	if err == sql.ErrNoRows {
+		return revisions, nil
+	}
+
+	for rows.Next() {
+		var blob []byte
+
+		r := &revision.Revision{}
+
+		err := rows.Scan(&r.ID, &blob, &r.Direction, &r.CreatedAt)
+
+		for i := range r.Hash {
+			r.Hash[i] = blob[i]
+		}
+
+		if err != nil {
+			return []*revision.Revision{}, err
+		}
+
+		if err := r.Load(); err != nil {
+			continue
+		}
+
+		revisions = append(revisions, r)
+	}
+
+	return revisions, nil
+}
+
+func (db *DB) Perform(r *revision.Revision) error {
 	query := fmt.Sprintf(`
 		SELECT id, hash, direction
 		FROM %s WHERE id = $1
@@ -123,12 +163,11 @@ func (db *DB) Perform(r *revision.Revision, d revision.Direction) error {
 	defer stmt.Close()
 
 	var performed revision.Revision
-	var direction revision.Direction
 	var blob []byte
 
 	row := stmt.QueryRow(r.ID)
 
-	err = row.Scan(&performed.ID, &blob, &direction)
+	err = row.Scan(&performed.ID, &blob, &performed.Direction)
 
 	if err != nil && err != sql.ErrNoRows {
 		return err
@@ -141,7 +180,7 @@ func (db *DB) Perform(r *revision.Revision, d revision.Direction) error {
 	}
 
 	if err == nil {
-		if d == direction {
+		if r.Direction == performed.Direction {
 			return ErrAlreadyPerformed
 		}
 
@@ -150,17 +189,7 @@ func (db *DB) Perform(r *revision.Revision, d revision.Direction) error {
 		}
 	}
 
-	if d == revision.Up {
-		_, err = db.Exec(r.Up)
+	_, err = db.Exec(r.Query())
 
-		return err
-	}
-
-	if d == revision.Down {
-		_, err = db.Exec(r.Down)
-
-		return err
-	}
-
-	return nil
+	return err
 }
