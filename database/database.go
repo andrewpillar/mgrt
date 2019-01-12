@@ -20,9 +20,9 @@ const (
 )
 
 var (
-	ErrInitialized    = errors.New("database already initialized")
-	ErrAlreadyRan     = errors.New("already ran revision")
-	ErrChecksumFailed = errors.New("revision checksum failed")
+	ErrInitialized      = errors.New("database already initialized")
+	ErrAlreadyPerformed = errors.New("already performed revision")
+	ErrChecksumFailed   = errors.New("revision checksum failed")
 )
 
 type Type uint32
@@ -142,7 +142,7 @@ func (db *DB) Perform(r *revision.Revision, d revision.Direction) error {
 
 	if err == nil {
 		if d == direction {
-			return ErrAlreadyRan
+			return ErrAlreadyPerformed
 		}
 
 		if r.Hash != performed.Hash {

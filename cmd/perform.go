@@ -79,7 +79,7 @@ func perform(c cli.Command, d revision.Direction) {
 
 	for _, r := range revisions {
 		if err := db.Perform(r, d); err != nil {
-			if err != database.ErrAlreadyRan && err != database.ErrChecksumFailed {
+			if err != database.ErrAlreadyPerformed && err != database.ErrChecksumFailed {
 				util.ExitError("failed to perform revision", err)
 			}
 
