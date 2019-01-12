@@ -6,6 +6,6 @@ import (
 	"github.com/andrewpillar/mgrt/revision"
 )
 
-func Run(c cli.Command) {
-	perform(c, revision.Up)
+func Reset(c cli.Command) {
+	perform(c, revision.Down)
 }

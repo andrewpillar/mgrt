@@ -24,6 +24,7 @@ func main() {
 	})
 
 	c.Command("run", cmd.Run)
+	c.Command("reset", cmd.Reset)
 
 	if err := c.Run(os.Args[1:]); err != nil {
 		util.ExitError("", err)
