@@ -24,7 +24,7 @@ func (d *Direction) Scan(src interface{}) error {
 	i, ok := src.(int64)
 
 	if !ok {
-		return errors.New("failed to scan direction type: could not type assert to uint32")
+		return errors.New("failed to scan direction type: could not type assert to int64")
 	}
 
 	(*d) = Direction(i)
