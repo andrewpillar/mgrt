@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/andrewpillar/mgrt/config"
 	"github.com/andrewpillar/mgrt/revision"
@@ -60,7 +61,7 @@ func Open(cfg *config.Config) (*DB, error) {
 			typ = SQLite3
 			break
 		default:
-			err = errors.New("unknown database " + cfg.Type)
+			err = errors.New("unknown database type " + cfg.Type)
 			break
 	}
 
@@ -72,62 +73,22 @@ func Open(cfg *config.Config) (*DB, error) {
 	}, err
 }
 
-func (d *DB) Init() error {
-	if d.Type == SQLite3 {
-		stmt, err := d.Prepare(`
-			SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = $1
-		`)
-
-		if err != nil {
-			return err
-		}
-
-		defer stmt.Close()
-
-		var count int
-
-		row := stmt.QueryRow(d.table)
-
-		if err := row.Scan(&count); err != nil {
-			return err
-		}
-
-		if count > 0 {
-			return ErrInitialized
-		}
-
-		query := fmt.Sprintf(initSqlite3f, d.table)
-
-		_, err = d.Exec(query)
-
-		if err != nil {
-			return err
-		}
-
-		return nil
+func (db *DB) Init() error {
+	switch db.Type {
+		case SQLite3:
+			return db.initSqlite3()
+		default:
+			return errors.New("unknown database type")
 	}
-
-	return nil
 }
 
-func (d *DB) Log(r *revision.Revision, dir revision.Direction) error {
+func (db *DB) Log(r *revision.Revision, d revision.Direction) error {
 	query := fmt.Sprintf(`
-		INSERT INTO %s (revision, hash, direction, created_at) VALUES ($1, $2, $3, $4)
-	`, d.table)
+		INSERT INTO %s (id, hash, direction, created_at)
+		VALUES ($1, $2, $3, $4)
+	`, db.table)
 
-	if d.Type == SQLite3 {
-		return d.logSqlite3(query, r, dir)
-	}
-
-	return nil
-}
-
-func (d *DB) Run(r *revision.Revision, dir revision.Direction) error {
-	query := fmt.Sprintf(`
-		SELECT * FROM %s WHERE revision = $1 ORDER BY created_at DESC LIMIT 1
-	`, d.table)
-
-	stmt, err := d.Prepare(query)
+	stmt, err := db.Prepare(query)
 
 	if err != nil {
 		return err
@@ -135,11 +96,71 @@ func (d *DB) Run(r *revision.Revision, dir revision.Direction) error {
 
 	defer stmt.Close()
 
-	row := stmt.QueryRow(r.ID)
+	blob := make([]byte, len(r.Hash), len(r.Hash))
 
-	if d.Type == SQLite3 {
-		return d.runSqlite3(row, r, dir)
+	for i, b := range r.Hash {
+		blob[i] = b
 	}
 
+	_, err = stmt.Exec(r.ID, blob, d, time.Now())
+
 	return err
+}
+
+func (db *DB) Perform(r *revision.Revision, d revision.Direction) error {
+	query := fmt.Sprintf(`
+		SELECT id, hash, direction
+		FROM %s WHERE id = $1
+		ORDER BY created_at DESC LIMIT 1
+	`, db.table)
+
+	stmt, err := db.Prepare(query)
+
+	if err != nil {
+		return err
+	}
+
+	defer stmt.Close()
+
+	var performed revision.Revision
+	var direction revision.Direction
+	var blob []byte
+
+	row := stmt.QueryRow(r.ID)
+
+	err = row.Scan(&performed.ID, &blob, &direction)
+
+	if err != nil && err != sql.ErrNoRows {
+		return err
+	}
+
+	if len(blob) > 0 {
+		for i := range performed.Hash {
+			performed.Hash[i] = blob[i]
+		}
+	}
+
+	if err == nil {
+		if d == direction {
+			return ErrAlreadyRan
+		}
+
+		if r.Hash != performed.Hash {
+			return ErrChecksumFailed
+		}
+	}
+
+	if d == revision.Up {
+		_, err = db.Exec(r.Up)
+
+		return err
+	}
+
+	if d == revision.Down {
+		_, err = db.Exec(r.Down)
+
+		return err
+	}
+
+	return nil
 }
