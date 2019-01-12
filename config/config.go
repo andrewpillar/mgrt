@@ -26,11 +26,8 @@ address:
 username:
 password:
 
-# Database name, and respective table for storing migration logs. If using
-# SQLite, then disregard the 'name' property.
+# Database to run the migrations against, if using SQLite then leave empty.
 database:
-  name:
-  table:
 `
 
 	RootDir = "mgrt"
@@ -48,11 +45,7 @@ type Config struct {
 	Address  string
 	Username string
 	Password string
-
-	Database struct {
-		Name  string
-		Table string
-	}
+	Database string
 }
 
 func Initialized() error {
