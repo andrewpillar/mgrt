@@ -1,16 +1,37 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/andrewpillar/cli"
 
 	"github.com/andrewpillar/mgrt/cmd"
+	"github.com/andrewpillar/mgrt/usage"
 	"github.com/andrewpillar/mgrt/util"
 )
 
+func usageHandler(c cli.Command) {
+	if c.Name == "" {
+		fmt.Println(usage.Main)
+		return
+	}
+}
+
 func main() {
 	c := cli.New()
+
+	c.AddFlag(&cli.Flag{
+		Name:      "help",
+		Long:      "--help",
+		Exclusive: true,
+		Handler:   func(f cli.Flag, c cli.Command) {
+			usageHandler(c)
+		},
+	})
+
+	c.NilHandler(usageHandler)
+	c.Main(nil)
 
 	c.Command("init", cmd.Init)
 
