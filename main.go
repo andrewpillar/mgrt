@@ -57,6 +57,16 @@ func main() {
 	c.Command("reset", cmd.Reset).AddFlag(configFlag)
 	c.Command("log", cmd.Log).AddFlag(configFlag)
 
+	lsCmd := c.Command("ls", cmd.Ls)
+
+	lsCmd.AddFlag(configFlag)
+
+	lsCmd.AddFlag(&cli.Flag{
+		Name:  "reverse",
+		Short: "-r",
+		Long:  "--reverse",
+	})
+
 	if err := c.Run(os.Args[1:]); err != nil {
 		util.ExitError("", err)
 	}
