@@ -9,6 +9,8 @@ import (
 )
 
 func Add(c cli.Command) {
+	config.Root = c.Flags.GetString("config")
+
 	if err := config.Initialized(); err != nil {
 		util.ExitError("not initialized", err)
 	}

@@ -55,7 +55,7 @@ type Revision struct {
 func Add(msg string) (*Revision, error) {
 	id := time.Now().Unix()
 
-	path := filepath.Join(config.RevisionsDir, strconv.FormatInt(id, 10) + ".sql")
+	path := filepath.Join(config.RevisionsDir(), strconv.FormatInt(id, 10) + ".sql")
 
 	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY, config.FileMode)
 
@@ -77,7 +77,7 @@ func Add(msg string) (*Revision, error) {
 }
 
 func Find(id string) (*Revision, error) {
-	return resolveFromPath(filepath.Join(config.RevisionsDir, id + ".sql"))
+	return resolveFromPath(filepath.Join(config.RevisionsDir(), id + ".sql"))
 }
 
 func Oldest() ([]*Revision, error) {
@@ -179,7 +179,7 @@ func walk(f appendFunc) ([]*Revision, error) {
 			return err
 		}
 
-		if path == config.RevisionsDir {
+		if path == config.RevisionsDir() {
 			return nil
 		}
 
@@ -193,7 +193,7 @@ func walk(f appendFunc) ([]*Revision, error) {
 		return nil
 	}
 
-	err := filepath.Walk(config.RevisionsDir, realWalk)
+	err := filepath.Walk(config.RevisionsDir(), realWalk)
 
 	return revisions, err
 }

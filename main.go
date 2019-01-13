@@ -30,6 +30,13 @@ func main() {
 		},
 	})
 
+	configFlag := &cli.Flag{
+		Name:     "config",
+		Short:    "-c",
+		Long:     "--config",
+		Argument: true,
+	}
+
 	c.NilHandler(usageHandler)
 	c.Main(nil)
 
@@ -44,9 +51,11 @@ func main() {
 		Argument: true,
 	})
 
-	c.Command("run", cmd.Run)
-	c.Command("reset", cmd.Reset)
-	c.Command("log", cmd.Log)
+	addCmd.AddFlag(configFlag)
+
+	c.Command("run", cmd.Run).AddFlag(configFlag)
+	c.Command("reset", cmd.Reset).AddFlag(configFlag)
+	c.Command("log", cmd.Log).AddFlag(configFlag)
 
 	if err := c.Run(os.Args[1:]); err != nil {
 		util.ExitError("", err)

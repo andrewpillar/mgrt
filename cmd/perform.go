@@ -47,6 +47,8 @@ func loadRevisions(c cli.Command, d revision.Direction) ([]*revision.Revision, e
 }
 
 func perform(c cli.Command, d revision.Direction) {
+	config.Root = c.Flags.GetString("config")
+
 	if err := config.Initialized(); err != nil {
 		util.ExitError("not initialize", err)
 	}

@@ -10,11 +10,13 @@ import (
 )
 
 func Init(c cli.Command) {
+	config.Root = c.Args.Get(0)
+
 	if err := config.Initialized(); err == nil {
 		util.ExitError("already initialized", nil)
 	}
 
-	if err := os.MkdirAll(config.RevisionsDir, config.DirMode); err != nil {
+	if err := os.MkdirAll(config.RevisionsDir(), config.DirMode); err != nil {
 		util.ExitError("failed to initialize", err)
 	}
 

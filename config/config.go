@@ -9,7 +9,8 @@ import (
 )
 
 var (
-	file = filepath.Join(RootDir, "config")
+	file      = "config"
+	revisions = "revisions"
 
 	stub = `
 
@@ -30,9 +31,7 @@ password:
 database:
 `
 
-	RootDir = "mgrt"
-
-	RevisionsDir = filepath.Join(RootDir, "revisions")
+	Root string
 
 	DirMode  = os.FileMode(0755)
 	FileMode = os.FileMode(0644)
@@ -49,16 +48,22 @@ type Config struct {
 }
 
 func Initialized() error {
-	for _, f := range []string{RootDir, file, RevisionsDir} {
+	if Root == "" {
+		Root = "mgrt"
+	}
+
+	dir := filepath.Join(Root, revisions)
+
+	for _, f := range []string{Root, filepath.Join(Root, file), dir} {
 		info, err := os.Stat(f)
 
 		if err != nil {
 			return err
 		}
 
-		if f == RootDir || f == RevisionsDir {
+		if f == Root || f == dir {
 			if !info.IsDir() {
-				return errors.New("not a directort " + f)
+				return errors.New("not a directory " + f)
 			}
 		}
 	}
@@ -67,7 +72,11 @@ func Initialized() error {
 }
 
 func Create() error {
-	f, err := os.OpenFile(file, os.O_CREATE|os.O_WRONLY, FileMode)
+	if Root == "" {
+		Root = "mgrt"
+	}
+
+	f, err := os.OpenFile(filepath.Join(Root, file), os.O_CREATE|os.O_WRONLY, FileMode)
 
 	if err != nil {
 		return err
@@ -80,8 +89,20 @@ func Create() error {
 	return err
 }
 
+func RevisionsDir() string {
+	if Root == "" {
+		Root = "mgrt"
+	}
+
+	return filepath.Join(Root, revisions)
+}
+
 func Open() (*Config, error) {
-	f, err := os.Open(file)
+	if Root == "" {
+		Root = "mgrt"
+	}
+
+	f, err := os.Open(filepath.Join(Root, file))
 
 	if err != nil {
 		return nil, err
