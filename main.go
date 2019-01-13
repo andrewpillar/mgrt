@@ -16,6 +16,8 @@ func usageHandler(c cli.Command) {
 		fmt.Println(usage.Main)
 		return
 	}
+
+	fmt.Println(usage.Commands[c.FullName()])
 }
 
 func main() {
