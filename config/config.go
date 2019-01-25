@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	file      = "config"
+	file      = "mgrt.yml"
 	revisions = "revisions"
 
 	stub = `
@@ -27,11 +27,11 @@ address:
 username:
 password:
 
-# Database to run the migrations against, if using SQLite then leave empty.
+# Database to run the revisions against, if using SQLite then leave empty.
 database:
 `
 
-	Root = "mgrt"
+	Root string
 
 	DirMode  = os.FileMode(0755)
 	FileMode = os.FileMode(0644)
