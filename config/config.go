@@ -31,7 +31,7 @@ password:
 database:
 `
 
-	Root string
+	Root = "mgrt"
 
 	DirMode  = os.FileMode(0755)
 	FileMode = os.FileMode(0644)
@@ -48,10 +48,6 @@ type Config struct {
 }
 
 func Initialized() error {
-	if Root == "" {
-		Root = "mgrt"
-	}
-
 	dir := filepath.Join(Root, revisions)
 
 	for _, f := range []string{Root, filepath.Join(Root, file), dir} {
@@ -72,10 +68,6 @@ func Initialized() error {
 }
 
 func Create() error {
-	if Root == "" {
-		Root = "mgrt"
-	}
-
 	f, err := os.OpenFile(filepath.Join(Root, file), os.O_CREATE|os.O_WRONLY, FileMode)
 
 	if err != nil {
@@ -90,18 +82,10 @@ func Create() error {
 }
 
 func RevisionsDir() string {
-	if Root == "" {
-		Root = "mgrt"
-	}
-
 	return filepath.Join(Root, revisions)
 }
 
 func Open() (*Config, error) {
-	if Root == "" {
-		Root = "mgrt"
-	}
-
 	f, err := os.Open(filepath.Join(Root, file))
 
 	if err != nil {

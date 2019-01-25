@@ -37,6 +37,7 @@ func main() {
 		Short:    "-c",
 		Long:     "--config",
 		Argument: true,
+		Default:  "mgrt",
 	}
 
 	c.NilHandler(usageHandler)
