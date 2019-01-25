@@ -2,6 +2,8 @@ github.com/andrewpillar/cli v1.0.9 h1:PkrQe7g3pxDExdyh/qRCOoQo2sGLVIAxULeF6H1kkt
 github.com/andrewpillar/cli v1.0.9/go.mod h1:YzqpycYZAs+UcYT9NJX2LctZTsKle6B8CYQRML3aalg=
 github.com/andrewpillar/cli v1.0.10 h1:kNhl4gnl8J5IlQiJbZBq7YqP3elh1tc0jPTHlDzRs88=
 github.com/andrewpillar/cli v1.0.10/go.mod h1:YzqpycYZAs+UcYT9NJX2LctZTsKle6B8CYQRML3aalg=
+github.com/andrewpillar/cli v1.0.13 h1:7X83BEYoextsgEEQaC1Z/CZBBTT9rnGlcvZ2DrVDQCA=
+github.com/andrewpillar/cli v1.0.13/go.mod h1:YzqpycYZAs+UcYT9NJX2LctZTsKle6B8CYQRML3aalg=
 github.com/go-sql-driver/mysql v1.4.1 h1:g24URVg0OFbNUTx9qqY1IRZ9D9z3iPyi5zKhQZpNwpA=
 github.com/go-sql-driver/mysql v1.4.1/go.mod h1:zAC/RDZ24gD3HViQzih4MyKcchzm+sOG5ZlKdlhCg5w=
 github.com/lib/pq v1.0.0 h1:X5PMW56eZitiTeO7tKzZxFCSpbFZJtkMMooicw2us9A=

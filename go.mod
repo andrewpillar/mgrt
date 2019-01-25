@@ -1,7 +1,7 @@
 module github.com/andrewpillar/mgrt
 
 require (
-	github.com/andrewpillar/cli v1.0.10
+	github.com/andrewpillar/cli v1.0.13
 	github.com/go-sql-driver/mysql v1.4.1
 	github.com/lib/pq v1.0.0
 	github.com/mattn/go-sqlite3 v1.10.0
