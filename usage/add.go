@@ -8,7 +8,7 @@ Usage:
 
 Options:
 
-  -c, --config=<dir>       The directory to use for configuration
-  -m, --message=<message>  The message for the revision
+  -c, --config   The directory to use for configuration
+  -m, --message  The message for the revision
 
   --help  Display this usage message`
