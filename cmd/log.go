@@ -47,6 +47,6 @@ func Log(c cli.Command) {
 		}
 
 		fmt.Printf("\nPerformed At: %s\n", r.CreatedAt.Format("Mon Jan 02 15:04:05 2006"))
-		fmt.Printf("%s\n", r.Query())
+		fmt.Printf("%s", r.Query())
 	}
 }

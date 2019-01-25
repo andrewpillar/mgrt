@@ -61,6 +61,14 @@ func perform(c cli.Command, d revision.Direction) {
 
 	defer cfg.Close()
 
+	if cfg.Type == "" {
+		util.ExitError("failed to perform revisions", errors.New("database type not specified"))
+	}
+
+	if cfg.Address == "" {
+		util.ExitError("failed to perform revisions", errors.New("database address not specified"))
+	}
+
 	db, err := database.Open(cfg)
 
 	if err != nil {
@@ -82,18 +90,12 @@ func perform(c cli.Command, d revision.Direction) {
 	for _, r := range revisions {
 		r.Direction = d
 
-		if err := db.Perform(r); err != nil {
-			if err != database.ErrAlreadyPerformed && err != database.ErrChecksumFailed {
-				util.ExitError("failed to perform revision", err)
-			}
+		if err := db.Perform(r); err != nil && err != database.ErrAlreadyPerformed {
+			util.ExitError("failed to perform revision", fmt.Errorf("%s: %d", err, r.ID))
+		}
 
+		if err == database.ErrAlreadyPerformed {
 			fmt.Printf("%s - %s: %d", d, err, r.ID)
-
-			if r.Message != "" {
-				fmt.Printf(": %s", r.Message)
-			}
-
-			fmt.Printf("\n")
 			continue
 		}
 
