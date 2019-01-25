@@ -90,12 +90,12 @@ func perform(c cli.Command, d revision.Direction) {
 	for _, r := range revisions {
 		r.Direction = d
 
-		if err := db.Perform(r); err != nil && err != database.ErrAlreadyPerformed {
-			util.ExitError("failed to perform revision", fmt.Errorf("%s: %d", err, r.ID))
-		}
+		if err := db.Perform(r); err != nil {
+			if err != database.ErrAlreadyPerformed {
+				util.ExitError("failed to perform revision", fmt.Errorf("%s: %d", err, r.ID))
+			}
 
-		if err == database.ErrAlreadyPerformed {
-			fmt.Printf("%s - %s: %d", d, err, r.ID)
+			fmt.Printf("%s - %s: %d\n", d, err, r.ID)
 			continue
 		}
 
