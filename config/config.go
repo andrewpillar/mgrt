@@ -23,7 +23,7 @@ type:
 # The database address, if SQLite then the filepath instead.
 address:
 
-# Login credentials for the user that will run the migrations.
+# Login credentials for the user that will run the revisions.
 username:
 password:
 
