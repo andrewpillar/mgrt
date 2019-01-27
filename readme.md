@@ -43,7 +43,7 @@ mgrt will then drop you into an editor, as specified via `$EDITOR`, for editing 
 
 ```
 
-To write our revision, we simply put the SQL code we want to be run beneath the necessary directive. For our current revision, we want to create users table.
+To write our revision, we simply put the SQL code we want to be run beneath the necessary directive. For our current revision, we want to create a users table.
 
 ```sql
 -- mgrt: revision: 1136214245: Create users table
@@ -147,7 +147,7 @@ Configuring mgrt is simple. Depending on the database type you're running agains
 
 mgrt works by performing revisions against the given database. Each time a revision is performed a hash of that revision is stored in the database. This is to ensure that no modifications of that revision cannot be run. Revisions in mgrt are deliberately immutable like this, so as to ensure that a log of all changes made against the database can be kept.
 
-A new revision can be created by running `mgrt add`. This command does take the optional `-m` flag for specifying a message for the revision. mgrt will then open up the newly created revision with the editor you have set in the `$EDITOR` environment variable.
+A new revision can be created by running `mgrt add`. This command takes the optional `-m` flag for specifying a message for the revision. mgrt will then open up the newly created revision with the editor you have set in the `$EDITOR` environment variable.
 
 ```sql
 -- mgrt: revision: 1136214245: Create users table
