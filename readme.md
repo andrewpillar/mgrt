@@ -208,6 +208,12 @@ CREATE TABLE users (
 
 Upon being run, mgrt will search the `revisions/` directory for the IDs of the revisions that were performed, and display the exact SQL queries that were performed for that revision in the log.
 
+By default, `mgrt log` will display the performed revisions latest first. This can be reversed however by passed the `-r` flag to the command.
+
+```
+$ mgrt log -r
+```
+
 
 ## Working with Multiple Databases
 
