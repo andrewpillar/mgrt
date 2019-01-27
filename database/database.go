@@ -115,6 +115,18 @@ func (db *DB) Log(r *revision.Revision) error {
 	return err
 }
 
+func (db *DB) ReadLogReverse(ids ...string) ([]*revision.Revision, error) {
+	query := "SELECT id, hash, direction, created_at FROM mgrt_revisions"
+
+	if len(ids) > 0 {
+		query += " WHERE id IN(" + strings.Join(ids, ", ") + ")"
+	}
+
+	query += " ORDER BY created_at ASC"
+
+	return db.realReadLog(query)
+}
+
 func (db *DB) ReadLog(ids ...string) ([]*revision.Revision, error) {
 	query := "SELECT id, hash, direction, created_at FROM mgrt_revisions"
 
@@ -124,6 +136,10 @@ func (db *DB) ReadLog(ids ...string) ([]*revision.Revision, error) {
 
 	query += " ORDER BY created_at DESC"
 
+	return db.realReadLog(query)
+}
+
+func (db *DB) realReadLog(query string) ([]*revision.Revision, error) {
 	stmt, err := db.Prepare(query)
 
 	if err != nil {

@@ -40,6 +40,12 @@ func main() {
 		Default:  ".",
 	}
 
+	reverseFlag := &cli.Flag{
+		Name:  "reverse",
+		Short: "-r",
+		Long:  "--reverse",
+	}
+
 	c.NilHandler(usageHandler)
 	c.Main(nil)
 
@@ -58,17 +64,16 @@ func main() {
 
 	c.Command("run", cmd.Run).AddFlag(configFlag)
 	c.Command("reset", cmd.Reset).AddFlag(configFlag)
-	c.Command("log", cmd.Log).AddFlag(configFlag)
+
+	logCmd := c.Command("log", cmd.Log)
+
+	logCmd.AddFlag(configFlag)
+	logCmd.AddFlag(reverseFlag)
 
 	lsCmd := c.Command("ls", cmd.Ls)
 
 	lsCmd.AddFlag(configFlag)
-
-	lsCmd.AddFlag(&cli.Flag{
-		Name:  "reverse",
-		Short: "-r",
-		Long:  "--reverse",
-	})
+	lsCmd.AddFlag(reverseFlag)
 
 	if err := c.Run(os.Args[1:]); err != nil {
 		util.ExitError("", err)

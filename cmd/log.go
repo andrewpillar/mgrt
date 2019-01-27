@@ -7,6 +7,7 @@ import (
 
 	"github.com/andrewpillar/mgrt/config"
 	"github.com/andrewpillar/mgrt/database"
+	"github.com/andrewpillar/mgrt/revision"
 	"github.com/andrewpillar/mgrt/util"
 )
 
@@ -33,7 +34,13 @@ func Log(c cli.Command) {
 
 	defer db.Close()
 
-	revisions, err := db.ReadLog(c.Args...)
+	var revisions []*revision.Revision
+
+	if c.Flags.IsSet("reverse") {
+		revisions, err = db.ReadLogReverse(c.Args...)
+	} else {
+		revisions, err = db.ReadLog(c.Args...)
+	}
 
 	if err != nil {
 		util.ExitError("failed to read revisions log", err)
