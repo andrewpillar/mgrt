@@ -154,13 +154,17 @@ func resolveFromPath(path string) (*Revision, error) {
 		}
 
 		if direction == Up {
-			hash.WriteString(line)
-			up.WriteString(line + "\n")
+			if line != "" {
+				hash.WriteString(line)
+				up.WriteString(line + "\n")
+			}
 		}
 
 		if direction == Down {
-			hash.WriteString(line)
-			down.WriteString(line + "\n")
+			if line != "" {
+				hash.WriteString(line)
+				down.WriteString(line + "\n")
+			}
 		}
 	}
 
@@ -220,12 +224,15 @@ func (r *Revision) Load() error {
 }
 
 func (r *Revision) Query() string {
-	switch r.Direction {
-		case Up:
-			return r.up
-		case Down:
-			return r.down
-		default:
-			return ""
+	query := "---\n"
+
+	if r.Direction == Up && r.up != "" {
+		query = r.up
 	}
+
+	if r.Direction == Down && r.down != "" {
+		query = r.down
+	}
+
+	return query
 }

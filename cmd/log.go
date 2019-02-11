@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"bufio"
 	"fmt"
+	"strings"
 
 	"github.com/andrewpillar/cli"
 
@@ -54,6 +56,15 @@ func Log(c cli.Command) {
 		}
 
 		fmt.Printf("\nPerformed At: %s\n", r.CreatedAt.Format("Mon Jan 02 15:04:05 2006"))
-		fmt.Printf("%s", r.Query())
+
+		s := bufio.NewScanner(strings.NewReader(r.Query()))
+
+		fmt.Printf("\n")
+
+		for s.Scan() {
+			fmt.Printf("    %s\n", s.Text())
+		}
+
+		fmt.Printf("\n")
 	}
 }
