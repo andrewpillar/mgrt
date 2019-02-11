@@ -40,43 +40,49 @@ type DB struct {
 }
 
 func Open(cfg *config.Config) (*DB, error) {
-	var db *sql.DB
-	var typ Type
-	var err error
+	if cfg.Type == "sqlite3" {
+		db, err := sql.Open(cfg.Type, cfg.Address)
 
-	switch cfg.Type {
-		case "sqlite3":
-			db, err = sql.Open(cfg.Type, cfg.Address)
-			typ = SQLite3
-			break
-		case "postgres":
-			host, port, e:= net.SplitHostPort(cfg.Address)
+		if err != nil {
+			return nil, err
+		}
 
-			if e != nil {
-				err = e
-				break
-			}
-
-			source := fmt.Sprintf(postgresSource, host, port, cfg.Username, cfg.Database, cfg.Password)
-
-			db, err = sql.Open(cfg.Type, source)
-			typ = Postgres
-			break
-		case "mysql":
-			source := fmt.Sprintf(mysqlSource, cfg.Username, cfg.Password, cfg.Address, cfg.Database)
-
-			db, err = sql.Open(cfg.Type, source)
-			typ = MySQL
-			break
-		default:
-			err = errors.New("unknown database type " + cfg.Type)
-			break
+		return &DB{DB: db, Type: SQLite3}, nil
 	}
 
-	return &DB{
-		DB:    db,
-		Type:  typ,
-	}, err
+	var typ Type
+	var source string
+
+	switch cfg.Type {
+		case "postgres":
+			host, port, err := net.SplitHostPort(cfg.Address)
+
+			if err != nil {
+				return nil, err
+			}
+
+			typ = Postgres
+			source = fmt.Sprintf(postgresSource, host, port, cfg.Username, cfg.Database, cfg.Password)
+			break
+		case "mysql":
+			typ = MySQL
+			source = fmt.Sprintf(mysqlSource, cfg.Username, cfg.Password, cfg.Address, cfg.Database)
+			break
+		default:
+			return nil, errors.New("unknown database type " + cfg.Type)
+	}
+
+	db, err := sql.Open(cfg.Type, source)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if err := db.Ping(); err != nil {
+		return nil, err
+	}
+
+	return &DB{DB: db, Type: typ}, nil
 }
 
 func (db *DB) Init() error {
