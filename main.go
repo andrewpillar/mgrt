@@ -46,8 +46,7 @@ func main() {
 		Long:  "--reverse",
 	}
 
-	c.NilHandler(usageHandler)
-	c.Main(nil)
+	c.MainCommand(usageHandler)
 
 	c.Command("init", cmd.Init)
 
