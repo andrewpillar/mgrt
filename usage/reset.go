@@ -8,4 +8,6 @@ Usage:
 
 Options:
 
+  -f, --force  Force the revisions to be reset
+
   --help  Display this usage message`

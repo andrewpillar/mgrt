@@ -77,6 +77,34 @@ func perform(c cli.Command, d revision.Direction) {
 
 	defer db.Close()
 
+	if c.Flags.IsSet("force") {
+		_, err := db.Exec("DROP TABLE mgrt_revisions")
+
+		if err != nil {
+			util.ExitError("failed to force revisions", err)
+		}
+
+		if err := db.Init(); err != nil && err != database.ErrInitialized {
+			util.ExitError("failed to force revisions", err)
+		}
+
+		forceDirection := d.Invert()
+
+		revisions, err := loadRevisions(c, forceDirection)
+
+		if err != nil {
+			util.ExitError("failed to force revisions", err)
+		}
+
+		for _, r := range revisions {
+			r.Direction = forceDirection
+
+			if err := db.Perform(r); err != nil && err != database.ErrAlreadyPerformed {
+				util.ExitError("failed to force revisions", err)
+			}
+		}
+	}
+
 	if err := db.Init(); err != nil && err != database.ErrInitialized {
 		util.ExitError("failed to initialize database", err)
 	}
@@ -95,7 +123,13 @@ func perform(c cli.Command, d revision.Direction) {
 				util.ExitError("failed to perform revision", fmt.Errorf("%s: %d", err, r.ID))
 			}
 
-			fmt.Printf("%s - %s: %d\n", d, err, r.ID)
+			fmt.Printf("%s - %s: %d", d, err, r.ID)
+
+			if r.Message != "" {
+				fmt.Printf(": %s", r.Message)
+			}
+
+			fmt.Printf("\n")
 			continue
 		}
 

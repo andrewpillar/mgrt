@@ -46,6 +46,12 @@ func main() {
 		Long:  "--reverse",
 	}
 
+	forceFlag := &cli.Flag{
+		Name:  "force",
+		Short: "-f",
+		Long:  "--force",
+	}
+
 	c.MainCommand(usageHandler)
 
 	c.Command("init", cmd.Init)
@@ -61,8 +67,8 @@ func main() {
 
 	addCmd.AddFlag(configFlag)
 
-	c.Command("run", cmd.Run).AddFlag(configFlag)
-	c.Command("reset", cmd.Reset).AddFlag(configFlag)
+	c.Command("run", cmd.Run).AddFlag(configFlag).AddFlag(forceFlag)
+	c.Command("reset", cmd.Reset).AddFlag(configFlag).AddFlag(forceFlag)
 
 	logCmd := c.Command("log", cmd.Log)
 

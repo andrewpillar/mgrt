@@ -31,3 +31,11 @@ func (d *Direction) Scan(src interface{}) error {
 
 	return nil
 }
+
+func (d Direction) Invert() Direction {
+	if d == Up {
+		return Down
+	}
+
+	return Up
+}
