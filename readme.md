@@ -182,6 +182,14 @@ Revisions can then be reset with the `mgrt reset` command. mgrt will take the SQ
 
 The typical convention to follow when writing revisions, is to have the `-- mgrt: down` directive do the opposite of the `-- mgrt: up` directive.
 
+Revisions can be forced to be performed by passing the `--force` flag. For example, if we've already performed `mgrt run`, we can run it again with the `--force` flag to overwrite what we already have.
+
+```
+$ mgrt run --force
+```
+
+When given this flag, mgrt will first perform the inverse of the given direction. In the above example mgrt will perform the down revision first, so as to clear down what we already have, then it will perform the revision in the direction we want. This can be useful when you want to quickly iterate on your database.
+
 ### Revision Log
 
 Each time a revision is performed a log will be made of that revision. This log is stored in the database itself, and contains the ID of the revision, the direction, the time it happened, and the hash of the revision.
