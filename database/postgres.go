@@ -8,6 +8,7 @@ func (db *DB) initPostgres() error {
 			id         INT NOT NULL,
 			hash       BYTEA NOT NULL,
 			direction  INT NOT NULL,
+			forced     BOOLEAN NOT NULL,
 			created_at TIMESTAMP NOT NULL
 		);
 	`)

@@ -98,10 +98,10 @@ func (db *DB) Init() error {
 	}
 }
 
-func (db *DB) Log(r *revision.Revision) error {
+func (db *DB) Log(r *revision.Revision, forced bool) error {
 	stmt, err := db.Prepare(`
-		INSERT INTO mgrt_revisions (id, hash, direction, created_at)
-		VALUES ($1, $2, $3, $4)
+		INSERT INTO mgrt_revisions (id, hash, direction, forced, created_at)
+		VALUES ($1, $2, $3, $4, $5)
 	`)
 
 	if err != nil {
@@ -116,13 +116,13 @@ func (db *DB) Log(r *revision.Revision) error {
 		blob[i] = b
 	}
 
-	_, err = stmt.Exec(r.ID, blob, r.Direction, time.Now())
+	_, err = stmt.Exec(r.ID, blob, r.Direction, forced, time.Now())
 
 	return err
 }
 
 func (db *DB) ReadLogReverse(ids ...string) ([]*revision.Revision, error) {
-	query := "SELECT id, hash, direction, created_at FROM mgrt_revisions"
+	query := "SELECT id, hash, direction, forced, created_at FROM mgrt_revisions"
 
 	if len(ids) > 0 {
 		query += " WHERE id IN(" + strings.Join(ids, ", ") + ")"
@@ -134,7 +134,7 @@ func (db *DB) ReadLogReverse(ids ...string) ([]*revision.Revision, error) {
 }
 
 func (db *DB) ReadLog(ids ...string) ([]*revision.Revision, error) {
-	query := "SELECT id, hash, direction, created_at FROM mgrt_revisions"
+	query := "SELECT id, hash, direction, forced, created_at FROM mgrt_revisions"
 
 	if len(ids) > 0 {
 		query += " WHERE id IN (" + strings.Join(ids, ", ") + ")"
@@ -171,7 +171,7 @@ func (db *DB) realReadLog(query string) ([]*revision.Revision, error) {
 
 		r := &revision.Revision{}
 
-		err := rows.Scan(&r.ID, &blob, &r.Direction, &r.CreatedAt)
+		err := rows.Scan(&r.ID, &blob, &r.Direction, &r.Forced, &r.CreatedAt)
 
 		for i := range r.Hash {
 			r.Hash[i] = blob[i]
@@ -191,7 +191,7 @@ func (db *DB) realReadLog(query string) ([]*revision.Revision, error) {
 	return revisions, nil
 }
 
-func (db *DB) Perform(r *revision.Revision) error {
+func (db *DB) Perform(r *revision.Revision, force bool) error {
 	stmt, err := db.Prepare(`
 		SELECT id, hash, direction
 		FROM mgrt_revisions WHERE id = $1
@@ -226,7 +226,7 @@ func (db *DB) Perform(r *revision.Revision) error {
 			return ErrAlreadyPerformed
 		}
 
-		if r.Hash != performed.Hash {
+		if r.Hash != performed.Hash && !force {
 			return ErrChecksumFailed
 		}
 	}

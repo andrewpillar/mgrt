@@ -48,6 +48,7 @@ type Revision struct {
 	Message   string
 	Hash      [sha256.Size]byte
 	Direction Direction
+	Forced    bool
 	CreatedAt *time.Time
 	Path      string
 }

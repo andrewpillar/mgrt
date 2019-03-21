@@ -49,6 +49,10 @@ func Log(c cli.Command) {
 	}
 
 	for _, r := range revisions {
+		if r.Forced {
+			fmt.Printf("[FORCED] ")
+		}
+
 		fmt.Printf("Revision: %d", r.ID)
 
 		if r.Message != "" {

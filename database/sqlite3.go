@@ -8,6 +8,7 @@ func (db *DB) initSqlite3() error {
 			id          INTEGER NOT NULL,
 			hash        BLOB NOT NULL,
 			direction   INTEGER NOT NULL,
+			forced      INTEGER NOT NULL,
 			created_at  TIMESTAMP NOT NULL
 		);
 	`)

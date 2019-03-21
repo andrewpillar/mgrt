@@ -8,6 +8,7 @@ func (db *DB) initMysql() error {
 			id         INT NOT NULL,
 			hash       BLOB NOT NULL,
 			direction  INT NOT NULL,
+			forced     TINYINT NOT NULL,
 			created_at TIMESTAMP NOT NULL
 		);
 	`)
