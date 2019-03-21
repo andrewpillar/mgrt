@@ -8,6 +8,6 @@ Usage:
 
 Options:
 
-  -f, --force  Force the revisions to be reset
+  -f, --force  Bypass the revision's checksum
 
   --help  Display this usage message`
