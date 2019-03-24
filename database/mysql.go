@@ -6,6 +6,7 @@ func (db *DB) initMysql() error {
 	_, err := db.Exec(`
 		CREATE TABLE mgrt_revisions (
 			id         INT NOT NULL,
+			author     VARCHAR NOT NULL,
 			hash       BLOB NOT NULL,
 			direction  INT NOT NULL,
 			forced     TINYINT NOT NULL,

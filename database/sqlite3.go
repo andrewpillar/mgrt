@@ -6,6 +6,7 @@ func (db *DB) initSqlite3() error {
 	_, err := db.Exec(`
 		CREATE TABLE mgrt_revisions (
 			id          INTEGER NOT NULL,
+			author      TEXT NOT NULL,
 			hash        BLOB NOT NULL,
 			direction   INTEGER NOT NULL,
 			forced      INTEGER NOT NULL,

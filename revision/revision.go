@@ -17,6 +17,7 @@ import (
 
 var (
 	stub = `-- mgrt: revision: %d: %s
+-- mgrt: author: %s
 -- mgrt: up
 
 -- mgrt: down
@@ -45,6 +46,7 @@ type Revision struct {
 	down string
 
 	ID        int64
+	Author    string
 	Message   string
 	Hash      [sha256.Size]byte
 	Direction Direction
@@ -53,7 +55,7 @@ type Revision struct {
 	Path      string
 }
 
-func Add(msg string) (*Revision, error) {
+func Add(msg, name, email string) (*Revision, error) {
 	id := time.Now().Unix()
 
 	path := filepath.Join(config.RevisionsDir(), strconv.FormatInt(id, 10) + ".sql")
@@ -68,11 +70,12 @@ func Add(msg string) (*Revision, error) {
 
 	r := &Revision{
 		ID:      id,
+		Author:  fmt.Sprintf("%s <%s>", name, email),
 		Message: msg,
 		Path:    path,
 	}
 
-	_, err = fmt.Fprintf(f, stub, r.ID, r.Message)
+	_, err = fmt.Fprintf(f, stub, r.ID, r.Message, r.Author)
 
 	return r, err
 }
@@ -140,6 +143,12 @@ func resolveFromPath(path string) (*Revision, error) {
 				}
 
 				directive = ""
+				continue
+			}
+
+			if directive == "author" {
+				r.Author = parts[2]
+				hash.WriteString(r.Author)
 				continue
 			}
 

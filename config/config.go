@@ -29,6 +29,11 @@ password:
 
 # Database to run the revisions against, if using SQLite then leave empty.
 database:
+
+# Details about the person creating the database revisions.
+author:
+  name:
+  email:
 `
 
 	Root string
@@ -45,6 +50,11 @@ type Config struct {
 	Username string
 	Password string
 	Database string
+
+	Author struct {
+		Name  string
+		Email string
+	}
 }
 
 func Initialized() error {

@@ -100,8 +100,8 @@ func (db *DB) Init() error {
 
 func (db *DB) Log(r *revision.Revision, forced bool) error {
 	stmt, err := db.Prepare(`
-		INSERT INTO mgrt_revisions (id, hash, direction, forced, created_at)
-		VALUES ($1, $2, $3, $4, $5)
+		INSERT INTO mgrt_revisions (id, author, hash, direction, forced, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6)
 	`)
 
 	if err != nil {
@@ -116,13 +116,13 @@ func (db *DB) Log(r *revision.Revision, forced bool) error {
 		blob[i] = b
 	}
 
-	_, err = stmt.Exec(r.ID, blob, r.Direction, forced, time.Now())
+	_, err = stmt.Exec(r.ID, r.Author, blob, r.Direction, forced, time.Now())
 
 	return err
 }
 
 func (db *DB) ReadLogReverse(ids ...string) ([]*revision.Revision, error) {
-	query := "SELECT id, hash, direction, forced, created_at FROM mgrt_revisions"
+	query := "SELECT id, author, hash, direction, forced, created_at FROM mgrt_revisions"
 
 	if len(ids) > 0 {
 		query += " WHERE id IN(" + strings.Join(ids, ", ") + ")"
@@ -134,7 +134,7 @@ func (db *DB) ReadLogReverse(ids ...string) ([]*revision.Revision, error) {
 }
 
 func (db *DB) ReadLog(ids ...string) ([]*revision.Revision, error) {
-	query := "SELECT id, hash, direction, forced, created_at FROM mgrt_revisions"
+	query := "SELECT id, author, hash, direction, forced, created_at FROM mgrt_revisions"
 
 	if len(ids) > 0 {
 		query += " WHERE id IN (" + strings.Join(ids, ", ") + ")"
@@ -171,7 +171,7 @@ func (db *DB) realReadLog(query string) ([]*revision.Revision, error) {
 
 		r := &revision.Revision{}
 
-		err := rows.Scan(&r.ID, &blob, &r.Direction, &r.Forced, &r.CreatedAt)
+		err := rows.Scan(&r.ID, &r.Author, &blob, &r.Direction, &r.Forced, &r.CreatedAt)
 
 		for i := range r.Hash {
 			r.Hash[i] = blob[i]

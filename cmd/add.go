@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"errors"
+
 	"github.com/andrewpillar/cli"
 
 	"github.com/andrewpillar/mgrt/config"
@@ -15,7 +17,19 @@ func Add(c cli.Command) {
 		util.ExitError("not initialized", err)
 	}
 
-	r, err := revision.Add(c.Flags.GetString("message"))
+	cfg, err := config.Open()
+
+	if err != nil {
+		util.ExitError("failed to open config", err)
+	}
+
+	defer cfg.Close()
+
+	if cfg.Author.Name == "" || cfg.Author.Email == "" {
+		util.ExitError("failed to perform revisions", errors.New("name and email not specified"))
+	}
+
+	r, err := revision.Add(c.Flags.GetString("message"), cfg.Author.Name, cfg.Author.Email)
 
 	if err != nil {
 		util.ExitError("failed to add revision", err)
