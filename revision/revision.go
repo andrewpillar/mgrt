@@ -147,7 +147,7 @@ func resolveFromPath(path string) (*Revision, error) {
 			}
 
 			if directive == "author" {
-				r.Author = parts[2]
+				r.Author = strings.TrimPrefix(parts[2], " ")
 				hash.WriteString(r.Author)
 				continue
 			}
