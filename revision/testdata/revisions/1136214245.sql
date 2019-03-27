@@ -2,7 +2,7 @@
 -- mgrt: author: test <test@example.com>
 -- mgrt: up
 
-CREATE TABLE example ();
+CREATE TABLE example();
 
 -- mgrt: down
 
