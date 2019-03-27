@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"os"
 
 	"github.com/andrewpillar/cli"
 
@@ -20,6 +21,7 @@ func loadRevisions(c cli.Command, d revision.Direction) ([]*revision.Revision, e
 			r, err := revision.Find(id)
 
 			if err != nil {
+				fmt.Fprintf(os.Stderr, "%s: failed to find revision: %s\n", os.Args[0], id)
 				continue
 			}
 
