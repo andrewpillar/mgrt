@@ -1,6 +1,7 @@
 package database
 
 import (
+	"crypto/sha256"
 	"os"
 	"testing"
 
@@ -29,18 +30,25 @@ func TestPerform(t *testing.T) {
 		t.Errorf("failed to open sqlite3 database: %s\n", err)
 	}
 
+	defer os.Remove("test.sqlite3")
 	defer db.Close()
 
 	if err := db.Init(); err != nil {
 		t.Errorf("failed to initialize sqlite3 database: %s\n", err)
 	}
 
-	for _, id := range revisionIds {
+	performed := make([]*revision.Revision, len(revisionIds) - 1, len(revisionIds) - 1)
+
+	for i, id := range revisionIds {
 		r, err := revision.Find(id)
 
 		if err != nil {
 			t.Errorf("failed to find revision: %s\n", err)
 			break
+		}
+
+		if i > 0 {
+			performed[i - 1] = r
 		}
 
 		r.Direction = revision.Up
@@ -49,7 +57,25 @@ func TestPerform(t *testing.T) {
 			t.Errorf("failed to perform revision %d: %s\n", r.ID, err)
 			break
 		}
+
+		if err := db.Log(r, false); err != nil {
+			t.Errorf("failed to log revision %d: %s\n", r.ID, err)
+			break
+		}
 	}
 
-	os.Remove("test.sqlite3")
+	for _, r := range performed {
+		r.Direction = revision.Down
+		r.Hash = [sha256.Size]byte{}
+
+		if err := db.Perform(r, false); err != ErrChecksumFailed {
+			t.Errorf("expected revision to fail checksum, it did not %d: %s\n", r.ID, err)
+			break
+		}
+
+		if err := db.Perform(r, true); err != nil {
+			t.Errorf("expected revision to not fail, it did %d: %s\n", r.ID, err)
+			break
+		}
+	}
 }

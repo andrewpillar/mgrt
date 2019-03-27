@@ -6,4 +6,4 @@ ALTER TABLE example ADD COLUMN example_timestamp TIMESTAMP;
 
 -- mgrt: down
 
-ALTER TABLE example DROP COLUMN example_timestamp;
+ALTER TABLE example RENAME example_timestamp TO _example_timestamp;

@@ -6,4 +6,4 @@ ALTER TABLE example ADD COLUMN example_text TEXT;
 
 -- mgrt: down
 
-ALTER TABLE example DROP COLUMN example_text;
+ALTER TABLE example RENAME example_text TO _example_text;

@@ -6,4 +6,4 @@ ALTER TABLE example ADD COLUMN example_int INTEGER;
 
 -- mgrt: down
 
-ALTER TABLE example DROP DOLUMN example_int;
+ALTER TABLE example RENAME example_int TO _example_int;
