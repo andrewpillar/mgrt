@@ -106,6 +106,7 @@ func (db *DB) Log(r *revision.Revision, forced bool) error {
 
 	switch db.Type {
 		case SQLite3:
+			fallthrough
 		case Postgres:
 			stmt, err = db.Prepare(`
 				INSERT INTO mgrt_revisions (id, author, hash, direction, forced, created_at)
@@ -216,6 +217,7 @@ func (db *DB) Perform(r *revision.Revision, force bool) error {
 
 	switch db.Type {
 		case SQLite3:
+			fallthrough
 		case Postgres:
 			stmt, err = db.Prepare(`
 				SELECT id, hash, direction
