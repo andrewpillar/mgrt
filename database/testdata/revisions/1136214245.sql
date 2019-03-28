@@ -2,10 +2,10 @@
 -- mgrt: author: test <test@example.com>
 -- mgrt: up
 
-CREATE TABLE example (
+CREATE TABLE first_table (
 	id INTEGER PRIMARY KEY NOT NULL
 );
 
 -- mgrt: down
 
-DROP TABLE example;
+DROP TABLE second_table;

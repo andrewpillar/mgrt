@@ -48,6 +48,20 @@ func performRevisions(db *DB, t *testing.T) {
 		}
 	}
 
+	var count int64
+
+	row := db.DB.QueryRow("SELECT COUNT(*) FROM mgrt_revisions")
+
+	if err := row.Scan(&count); err != nil {
+		t.Errorf("failed to count rows in mgrt_revisions: %s\n", err)
+	}
+
+	expected := int64(len(revisionIds))
+
+	if count != expected {
+		t.Errorf("actual number of revisions performed does not match expected: expected = %d, actual =%d\n", expected, count)
+	}
+
 	for _, r := range performed {
 		r.Direction = revision.Down
 		r.Hash = [sha256.Size]byte{}

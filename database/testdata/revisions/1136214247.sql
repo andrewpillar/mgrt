@@ -2,8 +2,10 @@
 -- mgrt: author: test <test@example.com>
 -- mgrt: up
 
-ALTER TABLE example ADD COLUMN example_text TEXT;
+CREATE TABLE third_table (
+	id INTEGER PRIMARY KEY NOT NULL
+);
 
 -- mgrt: down
 
-ALTER TABLE example RENAME example_text TO _example_text;
+DROP TABLE third_table;

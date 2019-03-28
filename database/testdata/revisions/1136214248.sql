@@ -2,8 +2,10 @@
 -- mgrt: author: test <test@example.com>
 -- mgrt: up
 
-ALTER TABLE example ADD COLUMN example_timestamp TIMESTAMP;
+CREATE TABLE fourth_table (
+	id INTEGER PRIMARY KEY NOT NULL
+);
 
 -- mgrt: down
 
-ALTER TABLE example RENAME example_timestamp TO _example_timestamp;
+DROP TABLE fourth_table;
