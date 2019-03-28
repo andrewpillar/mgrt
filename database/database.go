@@ -109,15 +109,18 @@ func (db *DB) Log(r *revision.Revision, forced bool) error {
 		case Postgres:
 			stmt, err = db.Prepare(`
 				INSERT INTO mgrt_revisions (id, author, hash, direction, forced, created_at)
-				VALUES (?, ?, ?, ?, ?, ?)
+				VALUES ($1, $2, $3, $4, $5, $6)
 			`)
+			break
 		case MySQL:
 			stmt, err = db.Prepare(`
 				INSERT INTO mgrt_revisions (id, author, hash, direction, forced, created_at)
-				VALUES ($1, $2, $3, $4, $5, $6)
+				VALUES (?, ?, ?, ?, ?, ?)
 			`)
+			break
 		default:
 			err = errors.New("unknown database type")
+			break
 	}
 
 	if err != nil {
@@ -219,14 +222,17 @@ func (db *DB) Perform(r *revision.Revision, force bool) error {
 				FROM mgrt_revisions WHERE id = $1
 				ORDER BY created_at DESC LIMIT 1
 			`)
+			break
 		case MySQL:
 			stmt, err = db.Prepare(`
 				SELECT id, hash, direction
 				FROM mgrt_revisions WHERE id = ?
 				ORDER BY created_at DESC LIMIT 1
 			`)
+			break
 		default:
 			err = errors.New("unknown database type")
+			break
 	}
 
 	if err != nil {
