@@ -1,19 +1,18 @@
 # mgrt
 
-mgrt is a simple tool for managing revisions across SQL databases. It takes SQL scripts, runs them against the database, and keeps a log of them. mgrt is not intrinsically tied to an ORM, since it only takes SQL, and sends it straight to the database.
+mgrt is a simple tool for managing revisions across SQL databases. It takes SQL scripts, runs them against the database, and keeps a log of them.
 
 * [Quick Start](#quick-start)
 * [Initialization](#initialization)
 * [Configuration](#configuration)
-* [Revisions](#revision)
-  * [Directives](#directives)
-  * [Performing a Revision](#performing-a-revision)
-  * [Revision Log](#revision-log)
-* [Working with Multiple Databases](#working-with-multiple-databases)
+* [Directives](#directives)
+* [Performing a Revision](#performing-a-revision)
+* [Revision Log](#revision-log)
+* [Working with Multiple Database](#working-with-multiple-database)
 
 ## Quick Start
 
-If you have Go installed then you can simply clone this repository and run `go install`, assuming you have `~/go/bin` in your `$PATH`.
+mgrt can be installed via Go. Simply clone the repository and run `go install`.
 
 ```
 $ git clone https://github.com/andrewpillar/mgrt.git
@@ -27,7 +26,32 @@ Once installed you can create a new mgrt instance by running `mgrt init`.
 $ mgrt init
 ```
 
-We can now begin writing up revisions for mgrt to perform with the `mgrt add`. command.
+Before we can start writing revisions, we need to set the author information in the `mgrt.yml` file.
+
+```yaml
+# The type of database, one of:
+#   - postgres
+#   - mysql
+#   - sqlite3
+type:
+
+# The database address, if SQLite then the filepath instead.
+address:
+
+# Login credentials for the user that will run the revisions.
+username:
+password:
+
+# Database to run the revisions against, if using SQLite then leave empty.
+database:
+
+# Details about the person creating the database revisions.
+author:
+  name: Andrew Pillar
+  email: andrewjohnpillar@gmail.com
+```
+
+We can now begin with writing up revisions for mgrt to perform with the `mgrt add` command.
 
 ```
 $ mgrt add -m "Create users table"
@@ -37,16 +61,17 @@ mgrt will then drop you into an editor, as specified via `$EDITOR`, for editing 
 
 ```sql
 -- mgrt: revision: 1136214245: Create users table
+-- mgrt: author: Andrew Pillar <andrewjohnpillar@gmail.com>
 -- mgrt: up
 
 -- mgrt: down
-
 ```
 
 To write our revision, we simply put the SQL code we want to be run beneath the necessary directive. For our current revision, we want to create a users table.
 
 ```sql
 -- mgrt: revision: 1136214245: Create users table
+-- mgrt: author: Andrew Pillar <andrewjohnpillar@gmail.com>
 -- mgrt: up
 
 CREATE TABLE users (
@@ -57,12 +82,11 @@ CREATE TABLE users (
 -- mgrt: down
 
 DROP TABLE users;
-
 ```
 
-As you can see, we write the creation logic beneath the `-- mgrt: up` directive, and the destruction logic beneath the `-- mgrt: down` directive.
+As you can see, we write the creation logic beneath the `-- mgrt: up` directive, and the destruction logic beneeath the `-- mgrt: down` directive.
 
-We now have a revision. Before we can run it however, we need to configure the database connectivity. This is done in the `mgrt.yml` file. For our purposes we will be running the revisions against an SQLite database, so we only need to configure two properties, `type`, and `address`.
+We now have a revision. Before we can run it however, we need to configure the database connectivity. This is done in the `mgrt.yml` file. For our purposes we will be running the revisions against an SQLite database, so we only need to configure two properties, `type` and `address`.
 
 ```yaml
 # The type of database, one of:
@@ -80,6 +104,11 @@ password:
 
 # Database to run the revisions against, if using SQLite then leave empty.
 database:
+
+# Details about the person creating the database revisions.
+author:
+  name: Andrew Pillar
+  email: andrewjohnpillar@gmail.com
 ```
 
 We can now perform our revisions against the database by running `mgrt run`.
@@ -87,14 +116,14 @@ We can now perform our revisions against the database by running `mgrt run`.
 ```
 $ mgrt run
 up - performed revision: 1136214245: Create users table
-
 ```
 
-This will perform the `-- mgrt: up` directive on each revision we have. If we try running `mgrt run` again, the revision will not be performed because it already once has.
+This will perform the `-- mgrt: up` directive on each revision we have. If we try running `mgrt run` again, the revision will not be performed because it was already run once.
+
 
 ```
 $ mgrt run
-up - already performed revision: 1136214245
+up - already performed revision: 1136214245: Create users table
 ```
 
 The revision we just performed can be undone by running `mgrt reset`. This will perform the `-- mgrt: down` directive on each revision.
@@ -120,7 +149,6 @@ CREATE TABLE users (
     email    TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL
 );
-
 ```
 
 ## Initialization
@@ -136,10 +164,12 @@ Configuring mgrt is simple. Depending on the database type you're running agains
 | Property | Purpose |
 |----------|---------|
 | `type` | The type of database the revisions will be performed against. |
-| `address` | The database address formatted as `<host>:<port>`. If using SQLite then the path to the file. |
+| `address` | The database address formatted as `<host>:<port>`. If using SQLite then a path to the file. |
 | `username` | The username of the user performing the revisions. |
 | `password` | The password of the user performing the revisions. |
 | `database` | The database to perform the revisions on. |
+| `author.name` | The name of the person authoring the revisions. |
+| `author.emial` | The email of the person authoring the revisions. |
 
 >**Note:** When preparing your database for mgrt to run against, ensure you do not have a table with the name of `mgrt_revisions`. This is the table used by mgrt for logging information about the performed revisions. You do not need to worry about creating this table, mgrt will do it for you when a revision is performed for the first time.
 
@@ -149,22 +179,20 @@ mgrt works by performing revisions against the given database. Each time a revis
 
 A new revision can be created by running `mgrt add`. This command takes the optional `-m` flag for specifying a message for the revision. mgrt will then open up the newly created revision with the editor you have set in the `$EDITOR` environment variable.
 
-```sql
+```
 -- mgrt: revision: 1136214245: Create users table
 -- mgrt: up
 
 -- mgrt: down
-
-
 ```
 
 Above is what a new revision would look like. It is an SQL file with some comments contained information about the revision. To mgrt these comments are known as [directives](#directives), and tell mgrt how to interpret the revision. Each revision that is created will have an ID set to the UNIX timestamp of the time the revision was created. If a message was provided to the `mgrt add` command via the `-m` flag then the message will be in the file too.
 
-### Directives
+## Directives
 
 Directives in mgrt are delineated with an SQL comment that follows the below format:
 
-```sql
+```
 --- mgrt: [directive]: [args...]
 ```
 
@@ -174,17 +202,19 @@ The `revision` directive tells mgrt about the revision itself. This will hold th
 
 The `up`, and `down` directives tell mgrt what SQL code should be performed for a revision depending on whether a revision is being run, or reset respectively.
 
-### Performing a Revision
+## Performing a Revision
 
 Revisions can be performed in two different ways. When performing a revision with the `mgrt run` command, mgrt will take the SQL code from the `-- mgrt: up` directive, and run it against the database.
 
 Revisions can then be reset with the `mgrt reset` command. mgrt will take the SQL code from the `-- mgrt: down` directive, and run it against the database.
 
+Both the `mgrt run`, and `mgrt reset` commands accept a list of revision IDs as their arguments, allowing for finer control over which revisions can be performed.
+
 The typical convention to follow when writing revisions, is to have the `-- mgrt: down` directive do the opposite of the `-- mgrt: up` directive.
 
-The checksum that occurs when a revision is performed can be bypassed by passing the `--force` flag to either the `run`, or `reset` command.
+Each time a revision is performed, a checksum is done to ensure that a revision that has been modified cannot be performed again. This is deliberate, as revisions are supposed to be treated as immutable, however sometimes you would want to bypass this check if you want faster iterations on the revisions you are writing. This checksum can be bypassed by passing the `-f` flag to either the `mgrt run`, or `mgrt reset` command.
 
-### Revision Log
+## Revision Log
 
 Each time a revision is performed a log will be made of that revision. This log is stored in the database itself, and contains the ID of the revision, the direction, the time it happened, and the hash of the revision.
 
@@ -204,18 +234,11 @@ CREATE TABLE users (
     email    TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL
 );
-
-
 ```
 
-Upon being run, mgrt will search the `revisions/` directory for the IDs of the revisions that were performed, and display the exact SQL queries that were performed for that revision in the log.
+Upon being run, mgrt will search the `revisions` directory for the IDs of the revisions that were performed, and display the exact SQL queries that were performed for that revision in the log.
 
 By default, `mgrt log` will display the performed revisions latest first. This can be reversed however by passing the `-r` flag to the command.
-
-```
-$ mgrt log -r
-```
-
 
 ## Working with Multiple Databases
 
@@ -232,7 +255,7 @@ Then to add a revision to a specific database you would pass the `-c` flag to th
 $ mgrt add -m "Create users table" -c uat
 ```
 
-And to have that revisions performed you would also pass the same flag to `run`.
+And to have that revision performed you would pass the same flag to the `run` command.
 
 ```
 $ mgrt run -c uat
