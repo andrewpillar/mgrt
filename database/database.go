@@ -101,12 +101,12 @@ func (db *DB) Init() error {
 }
 
 func (db *DB) Log(r *revision.Revision, forced bool) error {
-	var stmt *db.Stmt
+	var stmt *sql.Stmt
 	var err error
 
 	switch db.Type {
 		case SQLite3:
-		case PostgreSQL:
+		case Postgres:
 			stmt, err = db.Prepare(`
 				INSERT INTO mgrt_revisions (id, author, hash, direction, forced, created_at)
 				VALUES (?, ?, ?, ?, ?, ?)
@@ -208,12 +208,12 @@ func (db *DB) realReadLog(query string) ([]*revision.Revision, error) {
 }
 
 func (db *DB) Perform(r *revision.Revision, force bool) error {
-	var stmt *db.Stmt
+	var stmt *sql.Stmt
 	var err error
 
 	switch db.Type {
 		case SQLite3:
-		case PostgreSQL:
+		case Postgres:
 			stmt, err = db.Prepare(`
 				SELECT id, hash, direction
 				FROM mgrt_revisions WHERE id = $1
