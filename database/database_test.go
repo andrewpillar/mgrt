@@ -65,20 +65,18 @@ func performRevisions(db *DB, t *testing.T) {
 }
 
 func TestPerformMySQL(t *testing.T) {
-	mysqlAddr := os.Getenv("MYSQL_ADDR")
 	mysqlUser := os.Getenv("MYSQL_USER")
 	mysqlPswd := os.Getenv("MYSQL_PSWD")
 	mysqlDb := os.Getenv("MYSQL_DB")
 
-	if mysqlAddr == "" || mysqlUser == "" || mysqlPswd == "" || mysqlDb == "" {
-		t.Log("missing one of: MYSQL_ADDR, MYSQL_USER, MYSQL_PSWD, MYSQL_DB")
+	if mysqlUser == "" || mysqlPswd == "" || mysqlDb == "" {
+		t.Log("missing one of: MYSQL_USER, MYSQL_PSWD, MYSQL_DB")
 		t.Log("not running MySQL tests")
 		return
 	}
 
 	cfg := &config.Config{
 		Type:     "mysql",
-		Address:  mysqlAddr,
 		Username: mysqlUser,
 		Password: mysqlPswd,
 		Database: mysqlDb,
