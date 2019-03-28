@@ -1,0 +1,45 @@
+driver:
+  type: qemu
+  image: alpine/latest-stable
+sources:
+  - https://github.com/andrewpillar/mgrt
+env:
+  - MIRROR=http://alpine.mirror.wearetriple.com
+  - DB_DATA_PATH=/var/lib/mysql
+  - DB_ROOT_PASS=secret
+  - DB_USER=mgrt
+  - DB_PASS=secret
+  - PG_ADDR=localhost:5432
+  - PG_USER=mgrt
+  - PG_PSWD=secret
+  - PG_DB=pg_db
+  - MYSQL_USER=root
+  - MYSQL_PSWD=secret
+  - MYSQL_DB=mysql_db
+stages:
+  - packages
+  - configure-mysql
+  - configure-postgresql
+  - test
+jobs:
+  - stage: packages
+    commands:
+      - echo "$MIRROR/edge/community" >> /etc/apk/repositories
+      - apk update
+      - apk add musl-dev go postgresql mariadb mariadb-client
+  - stage: configure-mysql
+    commands:
+      - mysql_install_db --user=mysql --datadir=${DB_DATA_PATH}
+      - service mariadb start
+      - mysqladmin -u root password ${DB_ROOT_PASS}
+      - echo 'CREATE DATABASE mysql_db;' | mysql -u root --password=${DB_ROOT_PASS}
+  - stage: configure-postgresql
+    commands:
+      - service postgresql start
+      - printf 'CREATE USER mgrt with PASSWORD %s;' "'secret'" | su - postgres -c psql
+      - printf 'CREATE DATABASE pg_db;' | su - postgres -c psql
+  - stage: test
+    commands:
+      - cd mgrt
+      - go test -v -cover ./...
+
