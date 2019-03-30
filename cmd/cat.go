@@ -24,10 +24,13 @@ func Cat(c cli.Command) {
 		util.ExitError("missing one of two flags", errors.New("--up, --down"))
 	}
 
+	code := 0
+
 	for _, id := range c.Args {
 		r, err := revision.Find(id)
 
 		if err != nil {
+			code = 1
 			fmt.Fprintf(os.Stderr, "%s: failed to find revision: %s\n", os.Args[0], id)
 			continue
 		}
@@ -40,4 +43,6 @@ func Cat(c cli.Command) {
 			io.Copy(os.Stdout, r.Down)
 		}
 	}
+
+	os.Exit(code)
 }
