@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/andrewpillar/cli"
 
@@ -35,5 +36,11 @@ func Add(c cli.Command) {
 		util.ExitError("failed to add revision", err)
 	}
 
-	util.OpenInEditor(r.Path)
+	if r.Message == "" {
+		util.OpenInEditor(r.MessagePath)
+	}
+
+	fmt.Println("added new revision at:")
+	fmt.Println("  ", r.UpPath)
+	fmt.Println("  ", r.DownPath)
 }

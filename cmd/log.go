@@ -59,7 +59,7 @@ func Log(c cli.Command) {
 			fmt.Printf(" - %s", r.Message)
 		}
 
-		fmt.Printf("\nAuthor:  %s\n", r.Author)
+		fmt.Printf("\nAuthor:   %s\n", r.Author)
 		fmt.Printf("Date:     %s\n", r.CreatedAt.Format("Mon Jan 02 15:04:05 2006"))
 
 		s := bufio.NewScanner(strings.NewReader(r.Query()))

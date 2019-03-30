@@ -25,12 +25,10 @@ const (
 var (
 	ErrInitialized      = errors.New("database already initialized")
 	ErrAlreadyPerformed = errors.New("already performed revision")
-	ErrChecksumFailed   = errors.New("revision checksum failed")
+	ErrCheckHashFailed  = errors.New("revision hash check failed")
 
 	postgresSource = "host=%s port=%s user=%s dbname=%s password=%s sslmode=disable"
 	mysqlSource    = "%s:%s@%s/%s"
-
-
 )
 
 type Type uint32
@@ -109,14 +107,14 @@ func (db *DB) Log(r *revision.Revision, forced bool) error {
 			fallthrough
 		case Postgres:
 			stmt, err = db.Prepare(`
-				INSERT INTO mgrt_revisions (id, author, hash, direction, forced, created_at)
-				VALUES ($1, $2, $3, $4, $5, $6)
+				INSERT INTO mgrt_revisions (id, author, message, hash, direction, forced, created_at)
+				VALUES ($1, $2, $3, $4, $5, $6, $7)
 			`)
 			break
 		case MySQL:
 			stmt, err = db.Prepare(`
-				INSERT INTO mgrt_revisions (id, author, hash, direction, forced, created_at)
-				VALUES (?, ?, ?, ?, ?, ?)
+				INSERT INTO mgrt_revisions (id, author, message, hash, direction, forced, created_at)
+				VALUES (?, ?, ?, ?, ?, ?, ?)
 			`)
 			break
 		default:
@@ -130,19 +128,23 @@ func (db *DB) Log(r *revision.Revision, forced bool) error {
 
 	defer stmt.Close()
 
-	blob := make([]byte, len(r.Hash), len(r.Hash))
-
-	for i, b := range r.Hash {
-		blob[i] = b
+	if err := r.GenHash(); err != nil {
+		return err
 	}
 
-	_, err = stmt.Exec(r.ID, r.Author, blob, r.Direction, forced, time.Now())
+	hash := make([]byte, len(r.Hash), len(r.Hash))
+
+	for i := range hash {
+		hash[i] = r.Hash[i]
+	}
+
+	_, err = stmt.Exec(r.ID, r.Author, r.Message, hash, r.Direction, forced, time.Now())
 
 	return err
 }
 
 func (db *DB) ReadLogReverse(ids ...string) ([]*revision.Revision, error) {
-	query := "SELECT id, author, hash, direction, forced, created_at FROM mgrt_revisions"
+	query := "SELECT id, author, message, hash, direction, forced, created_at FROM mgrt_revisions"
 
 	if len(ids) > 0 {
 		query += " WHERE id IN(" + strings.Join(ids, ", ") + ")"
@@ -154,7 +156,7 @@ func (db *DB) ReadLogReverse(ids ...string) ([]*revision.Revision, error) {
 }
 
 func (db *DB) ReadLog(ids ...string) ([]*revision.Revision, error) {
-	query := "SELECT id, author, hash, direction, forced, created_at FROM mgrt_revisions"
+	query := "SELECT id, author, message, hash, direction, forced, created_at FROM mgrt_revisions"
 
 	if len(ids) > 0 {
 		query += " WHERE id IN (" + strings.Join(ids, ", ") + ")"
@@ -187,18 +189,18 @@ func (db *DB) realReadLog(query string) ([]*revision.Revision, error) {
 	}
 
 	for rows.Next() {
-		var blob []byte
-
 		r := &revision.Revision{}
 
-		err := rows.Scan(&r.ID, &r.Author, &blob, &r.Direction, &r.Forced, &r.CreatedAt)
+		hash := []byte{}
 
-		for i := range r.Hash {
-			r.Hash[i] = blob[i]
-		}
+		err := rows.Scan(&r.ID, &r.Author, &r.Message, &hash, &r.Direction, &r.Forced, &r.CreatedAt)
 
 		if err != nil {
 			return []*revision.Revision{}, err
+		}
+
+		for i := range r.Hash {
+			r.Hash[i] = hash[i]
 		}
 
 		if err := r.Load(); err != nil {
@@ -244,29 +246,77 @@ func (db *DB) Perform(r *revision.Revision, force bool) error {
 	defer stmt.Close()
 
 	var performed revision.Revision
-	var blob []byte
+	var hash []byte
 
 	row := stmt.QueryRow(r.ID)
 
-	err = row.Scan(&performed.ID, &blob, &performed.Direction)
+	err = row.Scan(&performed.ID, &hash, &performed.Direction)
 
-	if err != nil && err != sql.ErrNoRows {
+	if err == sql.ErrNoRows {
+		_, err = db.Exec(r.Query())
+
 		return err
 	}
 
-	if len(blob) > 0 {
-		for i := range performed.Hash {
-			performed.Hash[i] = blob[i]
+	if err != nil {
+		return err
+	}
+
+	if len(hash) > 0 {
+		for i := range r.Hash {
+			r.Hash[i] = hash[i]
 		}
 	}
 
-	if err == nil {
-		if r.Direction == performed.Direction {
-			return ErrAlreadyPerformed
-		}
+	if r.Direction == performed.Direction {
+		return ErrAlreadyPerformed
+	}
 
-		if r.Hash != performed.Hash && !force {
-			return ErrChecksumFailed
+	switch db.Type {
+		case SQLite3:
+			fallthrough
+		case Postgres:
+			stmt, err = db.Prepare(`
+				SELECT hash
+				FROM mgrt_revisions
+				WHERE id = $1 AND direction = $2 AND forced = false
+				ORDER BY created_at DESC LIMIT 1
+			`)
+		case MySQL:
+			stmt, err = db.Prepare(`
+				SELECT hash
+				FROM mgrt_revisions
+				WHERE id = ? AND direction = ? AND forced = false
+				ORDER BY created_at DESC LIMIT 1
+			`)
+		default:
+			err = errors.New("unknown database type")
+			break
+	}
+
+	if err != nil {
+		return err
+	}
+
+	hash = []byte{}
+
+	row = stmt.QueryRow(r.ID, r.Direction)
+
+	err = row.Scan(&hash)
+
+	if err == sql.ErrNoRows {
+		err = nil
+	}
+
+	if err != nil {
+		return err
+	}
+
+	if len(hash) > 0 {
+		for i := range r.Hash {
+			if r.Hash[i] != hash[i] && !force {
+				return ErrCheckHashFailed
+			}
 		}
 	}
 

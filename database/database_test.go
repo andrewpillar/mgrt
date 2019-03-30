@@ -9,72 +9,58 @@ import (
 	"github.com/andrewpillar/mgrt/revision"
 )
 
-var revisionIds = []string{
-	"1136214245",
-	"1136214246",
-	"1136214247",
-	"1136214248",
-}
-
 func performRevisions(db *DB, t *testing.T) {
 	if err := db.Init(); err != nil {
 		t.Errorf("failed to initialize database: %s\n", err)
 	}
 
-	performed := make([]*revision.Revision, len(revisionIds) - 1, len(revisionIds) - 1)
+	r, err := revision.Find("1136214245")
 
-	for i, id := range revisionIds {
-		r, err := revision.Find(id)
+	if err != nil {
+		t.Errorf("failed to find revision: %s\n", err)
+		return
+	}
 
-		if err != nil {
-			t.Errorf("failed to find revision: %s\n", err)
-			break
-		}
+	r.Direction = revision.Up
 
-		if i > 0 {
-			performed[i - 1] = r
-		}
+	if err := db.Perform(r, false); err != nil {
+		t.Errorf("failed to perform revision: %s\n", err)
+		return
+	}
 
-		r.Direction = revision.Up
-
-		if err := db.Perform(r, false); err != nil {
-			t.Errorf("failed to perform revision %d: %s\n", r.ID, err)
-			break
-		}
-
-		if err := db.Log(r, false); err != nil {
-			t.Errorf("failed to log revision %d: %s\n", r.ID, err)
-			break
-		}
+	if err := db.Log(r, false); err != nil {
+		t.Errorf("failed to log revision: %s\n", err)
+		return
 	}
 
 	var count int64
 
-	row := db.DB.QueryRow("SELECT COUNT(*) FROM mgrt_revisions")
+	row := db.QueryRow("SELECT COUNT(*) FROM mgrt_revisions")
+	row.Scan(&count)
 
-	if err := row.Scan(&count); err != nil {
-		t.Errorf("failed to count rows in mgrt_revisions: %s\n", err)
+	if count != int64(1) {
+		t.Errorf("performed revisions did not match expected: expected = '1', actual = '%d'\n", count)
+		return
 	}
 
-	expected := int64(len(revisionIds))
+	// Check to see if the revision performed, and the example table exists.
+	_, err = db.Query("INSERT INTO example (id) VALUES (1)")
 
-	if count != expected {
-		t.Errorf("actual number of revisions performed does not match expected: expected = %d, actual =%d\n", expected, count)
+	if err != nil {
+		t.Errorf("failed to insert test record: %s\n", err)
+		return
 	}
 
-	for _, r := range performed {
-		r.Direction = revision.Down
-		r.Hash = [sha256.Size]byte{}
+	r.Direction = revision.Down
+	r.Hash = [sha256.Size]byte{}
 
-		if err := db.Perform(r, false); err != ErrChecksumFailed {
-			t.Errorf("expected revision to fail checksum, it did not %d: %s\n", r.ID, err)
-			break
-		}
+	if err := db.Perform(r, false); err != ErrCheckHashFailed {
+		t.Errorf("performed revision did not fail hash check: %s\n", err)
+		return
+	}
 
-		if err := db.Perform(r, true); err != nil {
-			t.Errorf("expected revision to not fail, it did %d: %s\n", r.ID, err)
-			break
-		}
+	if err := db.Perform(r, true); err != nil {
+		t.Errorf("failed to perform revision: %s\n", err)
 	}
 }
 

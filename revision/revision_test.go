@@ -1,87 +1,128 @@
 package revision
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
+	"strconv"
 	"testing"
-	"time"
 
 	"github.com/andrewpillar/mgrt/config"
 )
 
 func TestAdd(t *testing.T) {
-	expectedId := time.Now().Unix()
-	expectedAuthor := "test <test@example.com>"
-	expectedPath := fmt.Sprintf("%s/%d.sql", config.RevisionsDir(), expectedId)
-	expectedStub := fmt.Sprintf(stub, expectedId, "", expectedAuthor)
-
 	r, err := Add("", "test", "test@example.com")
 
 	if err != nil {
 		t.Errorf("failed to add revision: %s\n", err)
+		return
 	}
 
-	if r.ID != expectedId {
-		t.Errorf("actual revision id does not match expected: expected = '%d', actual = '%d'\n", expectedId, r.ID)
-	}
+	path := filepath.Join(config.RevisionsDir(), strconv.FormatInt(r.ID, 10))
 
-	if r.Author != expectedAuthor {
-		t.Errorf("actual revision author does not match expected: expected = '%s', actual = '%s'\n", expectedAuthor, r.Author)
-	}
-
-	if r.Path != expectedPath {
-		t.Errorf("actual revision path does not match expected: expected = '%s', actual = '%s'\n", expectedPath, r.Path)
-	}
-
-	b, err := ioutil.ReadFile(r.Path)
+	info, err := os.Stat(path)
 
 	if err != nil {
-		t.Errorf("failed to read file: %s\n", err)
+		t.Errorf("failed to stat path: %s\n", err)
+		return
 	}
 
-	bexpected := []byte(expectedStub)
-
-	if len(b) != len(bexpected) {
-		t.Errorf("actual revision length does not match expected: expected = '%d', actual = '%d'\n", len(bexpected), len(b))
+	if !info.IsDir() {
+		t.Errorf("revision is not a directory\n")
+		return
 	}
 
-	for i := range b {
-		if b[i] != bexpected[i] {
-			t.Errorf("actual revision character does not match expected: expected = '%s', actual = '%s'\n", string(bexpected[i]), string(b[i]))
+	for _, p := range []string{r.MessagePath, r.DownPath, r.UpPath} {
+		info, err = os.Stat(p)
+
+		if err != nil {
+			t.Errorf("failed to stat path: %s\n", err)
+			return
 		}
 	}
 
-	os.Remove(r.Path)
+	b, err := ioutil.ReadFile(r.MessagePath)
+
+	if err != nil {
+		t.Errorf("failed to read file: %s\n", err)
+		return
+	}
+
+	author := []byte("Author: test <test@example.com>\n")
+
+	if len(b) != len(author) {
+		t.Errorf(
+			"revision author does not match: expected = '%s', actual = '%s'\n",
+			string(author),
+			string(b),
+		)
+		return
+	}
+
+	authorMatch := true
+
+	for i := range author {
+		if b[i] != author[i] {
+			authorMatch = false
+			break
+		}
+	}
+
+	if !authorMatch {
+		t.Errorf(
+			"revision author does not match: expected = '%s', actual = '%s'\n",
+			string(author),
+			string(b),
+		)
+		return
+	}
+
+	if err := os.RemoveAll(path); err != nil {
+		t.Errorf("failed to clear test files: %s\n", err)
+	}
 }
 
 func TestFind(t *testing.T) {
-	expectedId := int64(1136214245)
-	expectedAuthor := "test <test@example.com>"
-
-	expectedUp := "CREATE TABLE example();\n"
-	expectedDown := "DROP TABLE example;\n"
-
 	r, err := Find("1136214245")
 
 	if err != nil {
 		t.Errorf("failed to find revision: %s\n", err)
+		return
 	}
 
-	if r.ID != expectedId {
-		t.Errorf("actual revision id does not match expected: expected = '%d', actual = '%d'\n", expectedId, r.ID)
+	author := "test <test@example.com>"
+
+	if r.Author != author {
+		t.Errorf(
+			"revision author does not match: expected = '%s', actual = '%s'\n",
+			author,
+			r.Author,
+		)
+		return
 	}
 
-	if r.Author != expectedAuthor {
-		t.Errorf("actual revision author does not match expected: expected = '%s', actual = '%s'\n", expectedAuthor, r.Author)
+	message := "Some message"
+
+	if r.Message != message {
+		t.Errorf(
+			"revision message does not match: expected = '%s', actual = '%s'\n",
+			message,
+			r.Message,
+		)
+		return
 	}
 
-	if r.up != expectedUp {
-		t.Errorf("actual revision up does not match expected: expected = '%s', actual = '%s'\n", expectedUp, r.up)
+	up := "CREATE TABLE example();\n"
+	down := "DROP TABLE example;\n"
+
+	if r.up.String() != up {
+		t.Errorf("revision up does not match: expected = '%s', actual = '%s'\n", up, r.up.String())
+		return
 	}
 
-	if r.down != expectedDown {
-		t.Errorf("actual revision down does not match expected: expected = '%s', actual = '%s'\n", expectedDown, r.down)
+	if r.down.String() != down {
+		t.Errorf("revision down does not match: expected = '%s', actual = '%s'\n", down, r.down.String())
+		return
 	}
 }
 
