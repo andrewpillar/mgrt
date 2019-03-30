@@ -191,20 +191,24 @@ This log can be viewed with the `mgrt log` command.
 
 ```
 $ mgrt log
-Revision: 1136214245 - Create users table
+Revision: 1136214245 99121b9c2c88efdf77a0da709476e9f57b08d8423fa8af5046c140950ecbc18a
 Author:   Andrew Pillar <andrewjohnpillar@gmail.com>
 Date:     Mon Jan 02 15:04:05 2006
 
-  DROP TABLE users;
+  Create users table
 
-Revision: 1136214245 - Create users table
+    DROP TABLE users;
+
+Revision: 1136214245 2d9d97a7e76b07c4636b45a7d3dfaa5a2586c2b0b6734cad4dd05438c96276d9
 Author:   Andrew Pillar <andrewjohnpillar@gmail.com>
 Date:     Mon Jan 02 15:04:05 2006
 
-  CREATE TABLE users (
-      email    TEXT UNIQUE NOT NULL,
-      password TEXT NOT NULL
-  );
+  Create users table
+
+    CREATE TABLE users (
+        email    TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL
+    );
 ```
 
 Upon being run, mgrt will search the `revisions` directory for the IDs of the revisions that were performed, and display the exact SQL queries that were performed for that revision in the log.
