@@ -230,7 +230,7 @@ $ mgrt cat 1136214245 --down
 DROP TABLE users;
 ```
 
-This can be useful if you want to debug any erroneously written queries you have in a revision. Of coures, since they are just plain SQL files on disk you could just `cat` the file normally, this command exists just as a helper.
+This can be useful if you want to debug any erroneously written queries you have in a revision. Of course, since they are just plain SQL files on disk you could just `cat` the file normally, this command exists just as a helper.
 
 ```
 $ mgrt cat 1136214245 --up | mysql ...
