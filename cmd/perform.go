@@ -94,6 +94,10 @@ func perform(c cli.Command, d revision.Direction) {
 	for _, r := range revisions {
 		r.Direction = d
 
+		if err := r.GenHash(); err != nil {
+			util.ExitError("failed to perform revision", err)
+		}
+
 		if err := db.Perform(r, force); err != nil {
 			if err != database.ErrAlreadyPerformed {
 				util.ExitError("failed to perform revision", fmt.Errorf("%s: %d", err, r.ID))
@@ -102,7 +106,9 @@ func perform(c cli.Command, d revision.Direction) {
 			fmt.Printf("%s - %s: %d", d, err, r.ID)
 
 			if r.Message != "" {
-				fmt.Printf(": %s", r.Message)
+				subject, _ := r.SplitMessage()
+
+				fmt.Printf(": %s", subject)
 			}
 
 			fmt.Printf("\n")
@@ -116,7 +122,9 @@ func perform(c cli.Command, d revision.Direction) {
 		fmt.Printf("%s - performed revision: %d", d, r.ID)
 
 		if r.Message != "" {
-			fmt.Printf(": %s", r.Message)
+			subject, _ := r.SplitMessage()
+
+			fmt.Printf(": %s", subject)
 		}
 
 		fmt.Printf("\n")

@@ -21,6 +21,10 @@ func performRevisions(db *DB, t *testing.T) {
 		return
 	}
 
+	if err := r.GenHash(); err != nil {
+		t.Errorf("failed to generate revision hash: %s\n", err)
+	}
+
 	r.Direction = revision.Up
 
 	if err := db.Perform(r, false); err != nil {
@@ -52,6 +56,18 @@ func performRevisions(db *DB, t *testing.T) {
 	}
 
 	r.Direction = revision.Down
+
+	if err := db.Perform(r, false); err != nil {
+		t.Errorf("failed to perform revision: %s\n", err)
+		return
+	}
+
+	if err := db.Log(r, false); err != nil {
+		t.Errorf("failed to log revision: %s\n", err)
+		return
+	}
+
+	r.Direction = revision.Up
 	r.Hash = [sha256.Size]byte{}
 
 	if err := db.Perform(r, false); err != ErrCheckHashFailed {
@@ -61,6 +77,11 @@ func performRevisions(db *DB, t *testing.T) {
 
 	if err := db.Perform(r, true); err != nil {
 		t.Errorf("failed to perform revision: %s\n", err)
+	}
+
+	if err := db.Log(r, false); err != nil {
+		t.Errorf("failed to log revision: %s\n", err)
+		return
 	}
 }
 

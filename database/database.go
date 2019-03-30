@@ -128,10 +128,6 @@ func (db *DB) Log(r *revision.Revision, forced bool) error {
 
 	defer stmt.Close()
 
-	if err := r.GenHash(); err != nil {
-		return err
-	}
-
 	hash := make([]byte, len(r.Hash), len(r.Hash))
 
 	for i := range hash {
@@ -245,12 +241,12 @@ func (db *DB) Perform(r *revision.Revision, force bool) error {
 
 	defer stmt.Close()
 
-	var performed revision.Revision
+	var lastRevision revision.Revision
 	var hash []byte
 
 	row := stmt.QueryRow(r.ID)
 
-	err = row.Scan(&performed.ID, &hash, &performed.Direction)
+	err = row.Scan(&lastRevision.ID, &hash, &lastRevision.Direction)
 
 	if err == sql.ErrNoRows {
 		_, err = db.Exec(r.Query())
@@ -258,17 +254,11 @@ func (db *DB) Perform(r *revision.Revision, force bool) error {
 		return err
 	}
 
-	if err != nil {
-		return err
+	for i := range lastRevision.Hash {
+		lastRevision.Hash[i] = hash[i]
 	}
 
-	if len(hash) > 0 {
-		for i := range r.Hash {
-			r.Hash[i] = hash[i]
-		}
-	}
-
-	if r.Direction == performed.Direction {
+	if r.Direction == lastRevision.Direction {
 		return ErrAlreadyPerformed
 	}
 
@@ -298,25 +288,23 @@ func (db *DB) Perform(r *revision.Revision, force bool) error {
 		return err
 	}
 
-	hash = []byte{}
-
 	row = stmt.QueryRow(r.ID, r.Direction)
 
 	err = row.Scan(&hash)
 
 	if err == sql.ErrNoRows {
-		err = nil
+		_, err = db.Exec(r.Query())
+
+		return err
 	}
 
 	if err != nil {
 		return err
 	}
 
-	if len(hash) > 0 {
-		for i := range r.Hash {
-			if r.Hash[i] != hash[i] && !force {
-				return ErrCheckHashFailed
-			}
+	for i := range hash {
+		if hash[i] != r.Hash[i] && !force {
+			return ErrCheckHashFailed
 		}
 	}
 
