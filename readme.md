@@ -169,7 +169,7 @@ Configuring mgrt is simple. Depending on the database type you're running agains
 | `password` | The password of the user performing the revisions. |
 | `database` | The database to perform the revisions on. |
 | `author.name` | The name of the person authoring the revisions. |
-| `author.emial` | The email of the person authoring the revisions. |
+| `author.email` | The email of the person authoring the revisions. |
 
 >**Note:** When preparing your database for mgrt to run against, ensure you do not have a table with the name of `mgrt_revisions`. This is the table used by mgrt for logging information about the performed revisions. You do not need to worry about creating this table, mgrt will do it for you when a revision is performed for the first time.
 
