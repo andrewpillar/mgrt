@@ -64,12 +64,16 @@ mgrt will create a directory named for the revision's ID, and populate it with s
 
 Writing the revision is as simple as editing the newly created SQL files.
 
+`up.sql`:
+
 ```sql
 CREATE TABLE users (
     email    TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL
 );
 ```
+
+`down.sql`:
 
 ```sql
 DROP TABLE users;
@@ -126,18 +130,24 @@ Each revision that has been performed will be logged in the database. This log c
 
 ```
 $ mgrt log
-Revision: 1136214245 - Create users table
-Performed At: Mon Jan 02 15:04:05 2006
+Revision: 1136214245 99121b9c2c88efdf77a0da709476e9f57b08d8423fa8af5046c140950ecbc18a
+Author:   Andrew Pillar <andrewjohnpillar@gmail.com>
+Date:     Mon Jan 02 15:04:05 2006
 
-DROP TABLE users;
+  Create users table
 
-Revision: 1136214245 - Create users table
-Performed At: Mon Jan 02 15:04:05 2006
+    DROP TABLE users;
 
-CREATE TABLE users (
-    email    TEXT UNIQUE NOT NULL,
-    password TEXT NOT NULL
-);
+Revision: 1136214245 2d9d97a7e76b07c4636b45a7d3dfaa5a2586c2b0b6734cad4dd05438c96276d9
+Author:   Andrew Pillar <andrewjohnpillar@gmail.com>
+Date:     Mon Jan 02 15:04:05 2006
+
+  Create users table
+
+    CREATE TABLE users (
+        email    TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL
+    );
 ```
 
 ## Initialization
