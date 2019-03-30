@@ -41,6 +41,6 @@ func Add(c cli.Command) {
 	}
 
 	fmt.Println("added new revision at:")
-	fmt.Println("  ", r.UpPath)
-	fmt.Println("  ", r.DownPath)
+	fmt.Println(" ", r.UpPath)
+	fmt.Println(" ", r.DownPath)
 }
