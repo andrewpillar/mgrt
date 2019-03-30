@@ -7,6 +7,7 @@ mgrt is a simple tool for managing revisions across SQL databases. It takes SQL 
 * [Configuration](#configuration)
 * [Performing a Revision](#performing-a-revision)
 * [Revision Log](#revision-log)
+* [Viewing Revisions](#viewing-revisions)
 * [Working with Multiple Databases](#working-with-multiple-databases)
 
 ## Quick Start
@@ -214,6 +215,28 @@ Date:     Mon Jan 02 15:04:05 2006
 Upon being run, mgrt will search the `revisions` directory for the IDs of the revisions that were performed, and display the exact SQL queries that were performed for that revision in the log.
 
 By default, `mgrt log` will display the performed revisions latest first. This can be reversed however by passing the `-r` flag to the command.
+
+## Viewing Revisions
+
+Revisions can be viewed via the `mgrt cat` command. This command must be provided either the `--up`, or `--down` flags, or both in order to view the contents of a revision.
+
+```
+$ mgrt cat 1136214245 --up
+CREATE TABLE users (
+    email    TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL
+);
+$ mgrt cat 1136214245 --down
+DROP TABLE users;
+```
+
+This can be useful if you want to debug any erroneously written queries you have in a revision. Of coures, since they are just plain SQL files on disk you could just `cat` the file normally, this command exists just as a helper.
+
+```
+$ mgrt cat 1136214245 --up | mysql ...
+```
+
+`mgrt cat` takes a list of revision IDs for its arguments.
 
 ## Working with Multiple Databases
 
