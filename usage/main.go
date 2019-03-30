@@ -3,6 +3,7 @@ package usage
 var (
 	Commands = map[string]string{
 		"add":   Add,
+		"cat":   Cat,
 		"init":  Init,
 		"log":   Log,
 		"ls":    Ls,
@@ -19,6 +20,7 @@ Usage:
 Commands:
 
   add    Add a new revision
+  cat    View a revision
   init   Initialize a new mgrt instance
   log    Display performed revisions
   ls     List available revisions

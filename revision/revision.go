@@ -34,8 +34,8 @@ var (
 type appendFunc func(revisions []*Revision, r *Revision) []*Revision
 
 type Revision struct {
-	up   *bytes.Buffer
-	down *bytes.Buffer
+	Up   *bytes.Buffer
+	Down *bytes.Buffer
 
 	ID        int64
 	Author    string
@@ -160,18 +160,18 @@ func resolveFromPath(path string) (*Revision, error) {
 	defer fdown.Close()
 
 	r := &Revision{
-		up:     &bytes.Buffer{},
-		down:   &bytes.Buffer{},
+		Up:     &bytes.Buffer{},
+		Down:   &bytes.Buffer{},
 		ID:     id,
 	}
 
-	_, err = io.Copy(r.up, fup)
+	_, err = io.Copy(r.Up, fup)
 
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = io.Copy(r.down, fdown)
+	_, err = io.Copy(r.Down, fdown)
 
 	if err != nil {
 		return nil, err
@@ -245,13 +245,13 @@ func (r *Revision) GenHash() error {
 	l := 0
 
 	if r.Direction == Up {
-		l = r.up.Len()
-		b = r.up.Bytes()
+		l = r.Up.Len()
+		b = r.Up.Bytes()
 	}
 
 	if r.Direction == Down {
-		l = r.down.Len()
-		b = r.down.Bytes()
+		l = r.Down.Len()
+		b = r.Down.Bytes()
 	}
 
 	tmp := make([]byte, l, l)
@@ -281,8 +281,8 @@ func (r *Revision) Load() error {
 		return err
 	}
 
-	r.up = realrev.up
-	r.down = realrev.down
+	r.Up = realrev.Up
+	r.Down = realrev.Down
 
 	return nil
 }
@@ -303,12 +303,12 @@ func (r Revision) SplitMessage() (string, string) {
 }
 
 func (r *Revision) Query() string {
-	if r.Direction == Up && r.up.Len() != 0 {
-		return r.up.String()
+	if r.Direction == Up && r.Up.Len() != 0 {
+		return r.Up.String()
 	}
 
-	if r.Direction == Down && r.down.Len() != 0 {
-		return r.down.String()
+	if r.Direction == Down && r.Down.Len() != 0 {
+		return r.Down.String()
 	}
 
 	return "---\n"

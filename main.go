@@ -32,13 +32,13 @@ func main() {
 		},
 	})
 
-	configFlag := &cli.Flag{
+	c.AddFlag(&cli.Flag{
 		Name:     "config",
 		Short:    "-c",
 		Long:     "--config",
 		Argument: true,
 		Default:  ".",
-	}
+	})
 
 	reverseFlag := &cli.Flag{
 		Name:  "reverse",
@@ -65,19 +65,27 @@ func main() {
 		Argument: true,
 	})
 
-	addCmd.AddFlag(configFlag)
+	catCmd := c.Command("cat", cmd.Cat)
 
-	c.Command("run", cmd.Run).AddFlag(configFlag).AddFlag(forceFlag)
-	c.Command("reset", cmd.Reset).AddFlag(configFlag).AddFlag(forceFlag)
+	catCmd.AddFlag(&cli.Flag{
+		Name: "up",
+		Long: "--up",
+	})
+
+	catCmd.AddFlag(&cli.Flag{
+		Name: "down",
+		Long: "--down",
+	})
+
+	c.Command("run", cmd.Run).AddFlag(forceFlag)
+	c.Command("reset", cmd.Reset).AddFlag(forceFlag)
 
 	logCmd := c.Command("log", cmd.Log)
 
-	logCmd.AddFlag(configFlag)
 	logCmd.AddFlag(reverseFlag)
 
 	lsCmd := c.Command("ls", cmd.Ls)
 
-	lsCmd.AddFlag(configFlag)
 	lsCmd.AddFlag(reverseFlag)
 
 	if err := c.Run(os.Args[1:]); err != nil {
