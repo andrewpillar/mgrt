@@ -33,12 +33,6 @@ var (
 
 type appendFunc func(revisions []*Revision, r *Revision) []*Revision
 
-type errMalformedRevision struct {
-	file string
-	line int
-	err  error
-}
-
 type Revision struct {
 	up   *bytes.Buffer
 	down *bytes.Buffer
@@ -244,10 +238,6 @@ func walk(f appendFunc) ([]*Revision, error) {
 	return revisions, nil
 }
 
-func (e *errMalformedRevision) Error() string {
-	return fmt.Sprintf("malformed revision: %s:%d: %s", e.file, e.line, e.err)
-}
-
 func (r *Revision) GenHash() error {
 	buf := bytes.NewBufferString(r.Author)
 
@@ -295,6 +285,21 @@ func (r *Revision) Load() error {
 	r.down = realrev.down
 
 	return nil
+}
+
+func (r Revision) SplitMessage() (string, string) {
+	s := bufio.NewScanner(strings.NewReader(r.Message))
+	s.Scan()
+
+	subject := s.Text()
+	body := &bytes.Buffer{}
+
+	for s.Scan() {
+		body.Write(s.Bytes())
+		body.Write([]byte{'\n'})
+	}
+
+	return subject, body.String()
 }
 
 func (r *Revision) Query() string {

@@ -49,18 +49,33 @@ func Log(c cli.Command) {
 	}
 
 	for _, r := range revisions {
-		if r.Forced {
-			fmt.Printf("[FORCED] ")
+
+		hash := make([]byte, len(r.Hash), len(r.Hash))
+
+		for i := range hash {
+			hash[i] = r.Hash[i]
 		}
 
-		fmt.Printf("Revision: %d", r.ID)
+		fmt.Printf("Revision: %d: %x", r.ID, hash)
 
-		if r.Message != "" {
-			fmt.Printf(" - %s", r.Message)
+		if r.Forced {
+			fmt.Printf(" [FORCED]")
 		}
 
 		fmt.Printf("\nAuthor:   %s\n", r.Author)
 		fmt.Printf("Date:     %s\n", r.CreatedAt.Format("Mon Jan 02 15:04:05 2006"))
+
+		if r.Message != "" {
+			subject, body := r.SplitMessage()
+
+			fmt.Printf("\n  %s\n", subject)
+
+			s := bufio.NewScanner(strings.NewReader(body))
+
+			for s.Scan() {
+				fmt.Printf("  %s\n", s.Text())
+			}
+		}
 
 		s := bufio.NewScanner(strings.NewReader(r.Query()))
 
