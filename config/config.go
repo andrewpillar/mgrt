@@ -30,6 +30,13 @@ password:
 # Database to run the revisions against, if using SQLite then leave empty.
 database:
 
+# SSL connection options.
+ssl:
+  mode: disable
+  cert:
+  key:
+  root:
+
 # Details about the person creating the database revisions.
 author:
   name:
@@ -50,6 +57,13 @@ type Config struct {
 	Username string
 	Password string
 	Database string
+
+	SSL struct {
+		Mode string
+		Cert string
+		Key  string
+		Root string
+	}
 
 	Author struct {
 		Name  string
@@ -110,6 +124,10 @@ func Open() (*Config, error) {
 
 	if err := dec.Decode(cfg); err != nil {
 		return nil, err
+	}
+
+	if cfg.SSL.Mode == "" {
+		cfg.SSL.Mode = "disable"
 	}
 
 	return cfg, nil
