@@ -131,7 +131,7 @@ Each revision that has been performed will be logged in the database. This log c
 
 ```
 $ mgrt log
-Revision: 1136214245 99121b9c2c88efdf77a0da709476e9f57b08d8423fa8af5046c140950ecbc18a
+Revision: 1136214245 - 99121b9c2c88efdf77a0da709476e9f57b08d8423fa8af5046c140950ecbc18a
 Author:   Andrew Pillar <andrewjohnpillar@gmail.com>
 Date:     Mon Jan 02 15:04:05 2006
 
@@ -139,7 +139,7 @@ Date:     Mon Jan 02 15:04:05 2006
 
     DROP TABLE users;
 
-Revision: 1136214245 2d9d97a7e76b07c4636b45a7d3dfaa5a2586c2b0b6734cad4dd05438c96276d9
+Revision: 1136214245 - 2d9d97a7e76b07c4636b45a7d3dfaa5a2586c2b0b6734cad4dd05438c96276d9
 Author:   Andrew Pillar <andrewjohnpillar@gmail.com>
 Date:     Mon Jan 02 15:04:05 2006
 
