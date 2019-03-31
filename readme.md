@@ -182,6 +182,8 @@ A new revision can be created by running `mgrt add`. This command takes the opti
 Author: Andrew Pillar <andrewjohnpillar@gmail.com>
 ```
 
+Messages for revisions ought to be treated somewhat like commit messages in Git. Whereby the top line is the subject line of the revision, and the body is used as a means of justification for the revision itself.
+
 ## Performing a Revision
 
 Revisions can be performed in two different ways. When performing a revision with the `mgrt run` command, mgrt will take the SQL code from the `up.sql` file, and run it against the database.
