@@ -49,7 +49,6 @@ func Log(c cli.Command) {
 	}
 
 	for _, r := range revisions {
-
 		hash := make([]byte, len(r.Hash), len(r.Hash))
 
 		for i := range hash {
