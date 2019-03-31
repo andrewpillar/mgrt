@@ -55,7 +55,7 @@ func Log(c cli.Command) {
 			hash[i] = r.Hash[i]
 		}
 
-		fmt.Printf("Revision: %d: %x", r.ID, hash)
+		fmt.Printf("Revision: %d - %x", r.ID, hash)
 
 		if r.Forced {
 			fmt.Printf(" [FORCED]")
