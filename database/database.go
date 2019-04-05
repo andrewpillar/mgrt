@@ -27,7 +27,7 @@ var (
 	ErrAlreadyPerformed = errors.New("already performed revision")
 	ErrCheckHashFailed  = errors.New("revision hash check failed")
 
-	postgresSource = "host=%s port=%s user=%s dbname=%s password=%s sslmode=disable"
+	postgresSource = "host=%s port=%s user=%s dbname=%s password=%s sslmode=%s"
 	mysqlSource    = "%s:%s@%s/%s"
 )
 
@@ -62,11 +62,41 @@ func Open(cfg *config.Config) (*DB, error) {
 			}
 
 			typ = Postgres
-			source = fmt.Sprintf(postgresSource, host, port, cfg.Username, cfg.Database, cfg.Password)
+
+			if cfg.SSL.Mode != "disable" {
+				if cfg.SSL.Cert != "" {
+					postgresSource += " sslcert=" + cfg.SSL.Cert
+				}
+
+				if cfg.SSL.Key != "" {
+					postgresSource += " sslkey=" + cfg.SSL.Key
+				}
+
+				if cfg.SSL.Root != "" {
+					postgresSource += " sslrootcert=" + cfg.SSL.Root
+				}
+			}
+
+			source = fmt.Sprintf(
+				postgresSource,
+				host,
+				port,
+				cfg.Username,
+				cfg.Database,
+				cfg.Password,
+				cfg.SSL.Mode,
+			)
 			break
 		case "mysql":
 			typ = MySQL
-			source = fmt.Sprintf(mysqlSource, cfg.Username, cfg.Password, cfg.Address, cfg.Database)
+
+			source = fmt.Sprintf(
+				mysqlSource,
+				cfg.Username,
+				cfg.Password,
+				cfg.Address,
+				cfg.Database,
+			)
 			break
 		default:
 			return nil, errors.New("unknown database type " + cfg.Type)
