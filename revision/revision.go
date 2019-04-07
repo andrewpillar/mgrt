@@ -223,16 +223,16 @@ func walk(f appendFunc) ([]*Revision, error) {
 		return []*Revision{}, err
 	}
 
-	revisions := make([]*Revision, len(files), len(files))
+	revisions := make([]*Revision, 0, len(files))
 
-	for i, file := range files {
+	for _, file := range files {
 		r, err := resolveFromPath(filepath.Join(dir, file.Name()))
 
 		if err != nil {
 			return []*Revision{}, err
 		}
 
-		revisions[i] = r
+		revisions = f(revisions, r)
 	}
 
 	return revisions, nil
