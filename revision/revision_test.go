@@ -10,6 +10,39 @@ import (
 	"github.com/andrewpillar/mgrt/config"
 )
 
+func TestWalk(t *testing.T) {
+	revisions, err := walk(append_)
+
+	if err != nil {
+		t.Errorf("failed to walk revisions: %s\n", err)
+		return
+	}
+
+	expected := int64(1136214245)
+
+	if revisions[0].ID != expected {
+		t.Errorf(
+			"revision id does not match: expected = '%d', actual = '%d'\n",
+			expected,
+			revisions[0].ID,
+		)
+		return
+	}
+
+	revisions, err = walk(prepend_)
+
+	expected = int64(1136214247)
+
+	if revisions[0].ID != expected {
+		t.Errorf(
+			"revision id does not match: expected = '%d', actual = '%d'\n",
+			expected,
+			revisions[0].ID,
+		)
+		return
+	}
+}
+
 func TestAdd(t *testing.T) {
 	r, err := Add("", "test", "test@example.com")
 
