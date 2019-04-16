@@ -1,9 +1,12 @@
 package database
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"database/sql"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"strings"
 	"time"
@@ -11,7 +14,8 @@ import (
 	"github.com/andrewpillar/mgrt/config"
 	"github.com/andrewpillar/mgrt/revision"
 
-	_ "github.com/go-sql-driver/mysql"
+	"github.com/go-sql-driver/mysql"
+
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -97,6 +101,34 @@ func Open(cfg *config.Config) (*DB, error) {
 				cfg.Address,
 				cfg.Database,
 			)
+
+			if cfg.SSL.Mode == "custom" {
+				source += "?tls=" + cfg.SSL.Mode
+
+				pool := x509.NewCertPool()
+
+				pem, err := ioutil.ReadFile(cfg.SSL.Root)
+
+				if err != nil {
+					return nil, err
+				}
+
+				if ok := pool.AppendCertsFromPEM(pem); !ok {
+					return nil, err
+				}
+
+				pair, err := tls.LoadX509KeyPair(cfg.SSL.Cert, cfg.SSL.Key)
+
+				if err != nil {
+					return nil, err
+				}
+
+				mysql.RegisterTLSConfig("custom", &tls.Config{
+					RootCAs:      pool,
+					Certificates: []tls.Certificate{pair},
+				})
+			}
+
 			break
 		default:
 			return nil, errors.New("unknown database type " + cfg.Type)
