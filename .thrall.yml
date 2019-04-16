@@ -21,6 +21,7 @@ stages:
   - configure-mysql
   - configure-postgresql
   - test
+  - build
 jobs:
   - stage: packages
     commands:
@@ -42,4 +43,9 @@ jobs:
     commands:
       - cd mgrt
       - go test -v -cover ./...
-
+  - stage: build
+    commands:
+      - cd mgrt
+      - go build
+    artifacts:
+      - /root/mgrt/mgrt => mgrt.out
