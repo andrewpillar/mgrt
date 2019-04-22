@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"bytes"
 	"fmt"
 
 	"github.com/andrewpillar/cli"
@@ -34,6 +35,13 @@ func Ls(c cli.Command) {
 		fmt.Printf("%d", r.ID)
 
 		if r.Message != "" {
+			bmsg := []byte(r.Message)
+			i := bytes.Index(bmsg, []byte{'\n'})
+
+			if i > -1 {
+				r.Message = string(bmsg[:i])
+			}
+
 			fmt.Printf(" - %s", r.Message)
 		}
 
