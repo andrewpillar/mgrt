@@ -202,7 +202,7 @@ func (db *DB) Log(r *revision.Revision, forced bool) error {
 }
 
 func (db *DB) ReadLogReverse(ids ...string) ([]*revision.Revision, error) {
-	query := "SELECT id, author, message, hash, direction, forced, created_at FROM mgrt_revisions"
+	query := "SELECT * FROM mgrt_revisions"
 
 	if len(ids) > 0 {
 		query += " WHERE id IN(" + strings.Join(ids, ", ") + ")"
@@ -214,7 +214,7 @@ func (db *DB) ReadLogReverse(ids ...string) ([]*revision.Revision, error) {
 }
 
 func (db *DB) ReadLog(ids ...string) ([]*revision.Revision, error) {
-	query := "SELECT id, author, message, hash, direction, forced, created_at FROM mgrt_revisions"
+	query := "SELECT * FROM mgrt_revisions"
 
 	if len(ids) > 0 {
 		query += " WHERE id IN (" + strings.Join(ids, ", ") + ")"

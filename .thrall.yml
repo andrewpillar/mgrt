@@ -29,6 +29,8 @@ jobs:
       - service mariadb start
       - mysqladmin -u root password ${DB_ROOT_PASS}
       - echo 'CREATE DATABASE mysql_db;' | mysql -u root --password=${DB_ROOT_PASS}
+      - echo 'CREATE USER mgrt@% IDENTIFIED BY secret;' | mysql -u root --password=${DB_ROOT_PASS}
+      - echo 'GRANT ALL PRIVILEGES ON *.* TO mgrt@%;' | mysql -u root --password=${DB_ROOT_PASS}
   - stage: configure-postgresql
     commands:
       - service postgresql start

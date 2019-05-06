@@ -63,14 +63,6 @@ func perform(c cli.Command, d revision.Direction) {
 
 	defer cfg.Close()
 
-	if cfg.Type == "" {
-		util.ExitError("failed to perform revisions", errors.New("database type not specified"))
-	}
-
-	if cfg.Address == "" {
-		util.ExitError("failed to perform revisions", errors.New("database address not specified"))
-	}
-
 	db, err := database.Open(cfg)
 
 	if err != nil {

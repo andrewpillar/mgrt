@@ -10,12 +10,14 @@ import (
 	"github.com/andrewpillar/mgrt/revision"
 )
 
+var revisionId = "1136214245"
+
 func performRevisions(db *DB, t *testing.T) {
 	if err := db.Init(); err != nil {
 		t.Errorf("failed to initialize database: %s\n", err)
 	}
 
-	r, err := revision.Find("1136214245")
+	r, err := revision.Find(revisionId)
 
 	if err != nil {
 		t.Errorf("failed to find revision: %s\n", err)
@@ -82,6 +84,13 @@ func performRevisions(db *DB, t *testing.T) {
 
 	if err := db.Log(r, false); err != nil {
 		t.Errorf("failed to log revision: %s\n", err)
+		return
+	}
+
+	_, err = db.ReadLog(revisionId)
+
+	if err != nil {
+		t.Errorf("failed to read revisions log: %s\n", err)
 		return
 	}
 }
