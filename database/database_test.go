@@ -2,6 +2,7 @@ package database
 
 import (
 	"crypto/sha256"
+	"database/sql"
 	"os"
 	"testing"
 
@@ -86,27 +87,21 @@ func performRevisions(db *DB, t *testing.T) {
 }
 
 func TestPerformMySQL(t *testing.T) {
-	mysqlUser := os.Getenv("MYSQL_USER")
-	mysqlPswd := os.Getenv("MYSQL_PSWD")
-	mysqlDb := os.Getenv("MYSQL_DB")
+	mysqlsrc := os.Getenv("MYSQLSOURCE")
 
-	if mysqlUser == "" || mysqlPswd == "" || mysqlDb == "" {
-		t.Log("missing one of: MYSQL_USER, MYSQL_PSWD, MYSQL_DB")
-		t.Log("not running MySQL tests")
-		return
+	if mysqlsrc == "" {
+		t.Skip("skipping mysql tests: MYSQLSOURCE not set\n")
 	}
 
-	cfg := &config.Config{
-		Type:     "mysql",
-		Username: mysqlUser,
-		Password: mysqlPswd,
-		Database: mysqlDb,
-	}
-
-	db, err := Open(cfg)
+	sqlDB, err := sql.Open("mysql", mysqlsrc)
 
 	if err != nil {
 		t.Errorf("failed to open mysql database: %s\n", err)
+	}
+
+	db := &DB{
+		DB:   sqlDB,
+		Type: MySQL,
 	}
 
 	defer db.Close()
@@ -115,29 +110,21 @@ func TestPerformMySQL(t *testing.T) {
 }
 
 func TestPerformPostgresql(t *testing.T) {
-	pgAddr := os.Getenv("PG_ADDR")
-	pgUser := os.Getenv("PG_USER")
-	pgPswd := os.Getenv("PG_PSWD")
-	pgDb := os.Getenv("PG_DB")
+	pgsrc := os.Getenv("PGSOURCE")
 
-	if pgAddr == "" || pgUser == "" || pgPswd == "" || pgDb == "" {
-		t.Log("missing one of: PG_ADDR, PG_USER, PG_PSWD, PG_DB")
-		t.Log("not running Postgresql tests")
-		return
+	if pgsrc == "" {
+		t.Skip("skipping postgresql tests: PGSOURCE not set\n")
 	}
 
-	cfg := &config.Config{
-		Type:     "postgres",
-		Address:  pgAddr,
-		Username: pgUser,
-		Password: pgPswd,
-		Database: pgDb,
-	}
-
-	db, err := Open(cfg)
+	sqlDB, err := sql.Open("postgres", pgsrc)
 
 	if err != nil {
 		t.Errorf("failed to open postgresql database: %s\n", err)
+	}
+
+	db := &DB{
+		DB:   sqlDB,
+		Type: Postgres,
 	}
 
 	defer db.Close()

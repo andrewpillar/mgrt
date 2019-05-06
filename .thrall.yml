@@ -9,13 +9,8 @@ env:
   - DB_ROOT_PASS=secret
   - DB_USER=mgrt
   - DB_PASS=secret
-  - PG_ADDR=localhost:5432
-  - PG_USER=mgrt
-  - PG_PSWD=secret
-  - PG_DB=pg_db
-  - MYSQL_USER=root
-  - MYSQL_PSWD=secret
-  - MYSQL_DB=mysql_db
+  - PGSOURCE="host=localhost port=5432 user=mgrt dbname=pg_db password=secret sslmode=disable"
+  - MYSQLSOURCE="root:secret@localhost:5432/mysql_db"
 stages:
   - packages
   - configure-mysql
