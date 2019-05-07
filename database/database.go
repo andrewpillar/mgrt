@@ -32,7 +32,7 @@ var (
 	ErrCheckHashFailed  = errors.New("revision hash check failed")
 
 	postgresSource = "host=%s port=%s user=%s dbname=%s password=%s sslmode=%s"
-	mysqlSource    = "%s:%s@%s/%s"
+	mysqlSource    = "%s:%s@%s/%s?parseTime=true"
 )
 
 type Type uint32
