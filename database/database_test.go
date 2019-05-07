@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/andrewpillar/mgrt/config"
 	"github.com/andrewpillar/mgrt/revision"
@@ -13,7 +14,7 @@ import (
 var revisionId = "1136214245"
 
 func performRevisions(db *DB, t *testing.T) {
-	if err := db.Init(); err != nil {
+	if err := db.Init(); err != nil && err != ErrInitialized {
 		t.Errorf("failed to initialize database: %s\n", err)
 	}
 
@@ -57,6 +58,9 @@ func performRevisions(db *DB, t *testing.T) {
 		t.Errorf("failed to insert test record: %s\n", err)
 		return
 	}
+
+	// Force revision created_at field to be different in database table.
+	time.Sleep(time.Second)
 
 	r.Direction = revision.Down
 
