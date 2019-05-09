@@ -44,5 +44,3 @@ jobs:
     commands:
       - cd mgrt
       - go build
-    artifacts:
-      - /root/mgrt/mgrt => mgrt.out
