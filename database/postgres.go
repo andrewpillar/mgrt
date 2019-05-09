@@ -10,6 +10,8 @@ func (db *DB) initPostgres() error {
 			message    TEXT NOT NULL,
 			hash       BYTEA NOT NULL,
 			direction  INT NOT NULL,
+			up         TEXT NULL,
+			down       TEXT NULL,
 			forced     BOOLEAN NOT NULL,
 			created_at TIMESTAMP NOT NULL
 		);

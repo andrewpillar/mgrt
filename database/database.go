@@ -54,8 +54,10 @@ func Open(cfg *config.Config) (*DB, error) {
 		return &DB{DB: db, Type: SQLite3}, nil
 	}
 
-	var typ Type
-	var source string
+	var (
+		typ    Type
+		source string
+	)
 
 	switch cfg.Type {
 		case "postgres":
@@ -161,22 +163,26 @@ func (db *DB) Init() error {
 }
 
 func (db *DB) Log(r *revision.Revision, forced bool) error {
-	var stmt *sql.Stmt
-	var err error
+	var (
+		stmt *sql.Stmt
+		err  error
+	)
 
 	switch db.Type {
 		case SQLite3:
 			fallthrough
 		case Postgres:
 			stmt, err = db.Prepare(`
-				INSERT INTO mgrt_revisions (id, author, message, hash, direction, forced, created_at)
-				VALUES ($1, $2, $3, $4, $5, $6, $7)
+				INSERT INTO mgrt_revisions
+				(id, author, message, hash, direction, up, down, forced, created_at)
+				VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 			`)
 			break
 		case MySQL:
 			stmt, err = db.Prepare(`
-				INSERT INTO mgrt_revisions (id, author, message, hash, direction, forced, created_at)
-				VALUES (?, ?, ?, ?, ?, ?, ?)
+				INSERT INTO mgrt_revisions
+				(id, author, message, hash, direction, up, down, forced, created_at)
+				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 			`)
 			break
 		default:
@@ -196,7 +202,7 @@ func (db *DB) Log(r *revision.Revision, forced bool) error {
 		hash[i] = r.Hash[i]
 	}
 
-	_, err = stmt.Exec(r.ID, r.Author, r.Message, hash, r.Direction, forced, time.Now())
+	_, err = stmt.Exec(r.ID, r.Author, r.Message, hash, r.Direction, r.Up, r.Down, forced, time.Now())
 
 	return err
 }
@@ -251,7 +257,17 @@ func (db *DB) realReadLog(query string) ([]*revision.Revision, error) {
 
 		hash := []byte{}
 
-		err := rows.Scan(&r.ID, &r.Author, &r.Message, &hash, &r.Direction, &r.Forced, &r.CreatedAt)
+		err := rows.Scan(
+			&r.ID,
+			&r.Author,
+			&r.Message,
+			&hash,
+			&r.Direction,
+			&r.Up,
+			&r.Down,
+			&r.Forced,
+			&r.CreatedAt,
+		)
 
 		if err != nil {
 			return []*revision.Revision{}, err
@@ -261,10 +277,6 @@ func (db *DB) realReadLog(query string) ([]*revision.Revision, error) {
 			r.Hash[i] = hash[i]
 		}
 
-		if err := r.Load(); err != nil {
-			continue
-		}
-
 		revisions = append(revisions, r)
 	}
 
@@ -272,8 +284,10 @@ func (db *DB) realReadLog(query string) ([]*revision.Revision, error) {
 }
 
 func (db *DB) Perform(r *revision.Revision, force bool) error {
-	var stmt *sql.Stmt
-	var err error
+	var (
+		stmt *sql.Stmt
+		err  error
+	)
 
 	switch db.Type {
 		case SQLite3:
@@ -303,12 +317,12 @@ func (db *DB) Perform(r *revision.Revision, force bool) error {
 
 	defer stmt.Close()
 
-	var lastRevision revision.Revision
-	var hash []byte
+	var (
+		prev revision.Revision
+		hash []byte
+	)
 
-	row := stmt.QueryRow(r.ID)
-
-	err = row.Scan(&lastRevision.ID, &hash, &lastRevision.Direction)
+	err = stmt.QueryRow(r.ID).Scan(&prev.ID, &hash, &prev.Direction)
 
 	if err == sql.ErrNoRows {
 		_, err = db.Exec(r.Query())
@@ -316,14 +330,16 @@ func (db *DB) Perform(r *revision.Revision, force bool) error {
 		return err
 	}
 
-	for i := range lastRevision.Hash {
-		lastRevision.Hash[i] = hash[i]
+	for i := range prev.Hash {
+		prev.Hash[i] = hash[i]
 	}
 
-	if r.Direction == lastRevision.Direction {
+	if r.Direction == prev.Direction {
 		return ErrAlreadyPerformed
 	}
 
+	// Get the hash for the last time this revision was performed for the
+	// hash check.
 	switch db.Type {
 		case SQLite3:
 			fallthrough
@@ -350,9 +366,7 @@ func (db *DB) Perform(r *revision.Revision, force bool) error {
 		return err
 	}
 
-	row = stmt.QueryRow(r.ID, r.Direction)
-
-	err = row.Scan(&hash)
+	err = stmt.QueryRow(r.ID, r.Direction).Scan(&hash)
 
 	if err == sql.ErrNoRows {
 		_, err = db.Exec(r.Query())

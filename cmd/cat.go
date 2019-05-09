@@ -36,12 +36,12 @@ func Cat(c cli.Command) {
 		}
 
 		if c.Flags.IsSet("up") {
-			io.Copy(os.Stdout, r.Up)
+			r.Direction = revision.Up
+		} else if c.Flags.IsSet("down") {
+			r.Direction = revision.Down
 		}
 
-		if c.Flags.IsSet("down") {
-			io.Copy(os.Stdout, r.Down)
-		}
+		fmt.Println(r.Query())
 	}
 
 	os.Exit(code)

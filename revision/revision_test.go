@@ -148,13 +148,13 @@ func TestFind(t *testing.T) {
 	up := "CREATE TABLE example();\n"
 	down := "DROP TABLE example;\n"
 
-	if r.Up.String() != up {
-		t.Errorf("revision up does not match: expected = '%s', actual = '%s'\n", up, r.Up.String())
+	if r.up.String != up {
+		t.Errorf("revision up does not match: expected = '%s', actual = '%s'\n", up, r.up.String)
 		return
 	}
 
-	if r.Down.String() != down {
-		t.Errorf("revision down does not match: expected = '%s', actual = '%s'\n", down, r.Down.String())
+	if r.down.String != down {
+		t.Errorf("revision down does not match: expected = '%s', actual = '%s'\n", down, r.down.String)
 		return
 	}
 }

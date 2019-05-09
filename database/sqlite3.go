@@ -10,6 +10,8 @@ func (db *DB) initSqlite3() error {
 			message    TEXT NOT NULL,
 			hash       BLOB NOT NULL,
 			direction  INTEGER NOT NULL,
+			up         TEXT NULL,
+			down       TEXT NULL,
 			forced     INTEGER NOT NULL,
 			created_at TIMESTAMP NOT NULL
 		);

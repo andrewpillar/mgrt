@@ -4,9 +4,9 @@ import (
 	"bufio"
 	"bytes"
 	"crypto/sha256"
+	"database/sql"
 	"errors"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -34,14 +34,13 @@ var (
 type appendFunc func(revisions []*Revision, r *Revision) []*Revision
 
 type Revision struct {
-	Up   *bytes.Buffer
-	Down *bytes.Buffer
-
 	ID        int64
 	Author    string
 	Message   string
 	Hash      [sha256.Size]byte
 	Direction Direction
+	Up        sql.NullString
+	Down      sql.NullString
 	Forced    bool
 	CreatedAt *time.Time
 
@@ -141,54 +140,43 @@ func resolveFromPath(path string) (*Revision, error) {
 		return nil, errors.New("invalid revision: " + err.Error())
 	}
 
-	var fup, fdown, fmessage *os.File
-
-	fup, err = os.Open(filepath.Join(path, upFile))
-
-	if err != nil {
-		return nil, err
-	}
-
-	defer fup.Close()
-
-	fdown, err = os.Open(filepath.Join(path, downFile))
-
-	if err != nil {
-		return nil, err
-	}
-
-	defer fdown.Close()
-
 	r := &Revision{
-		Up:     &bytes.Buffer{},
-		Down:   &bytes.Buffer{},
-		ID:     id,
+		ID: id,
 	}
 
-	_, err = io.Copy(r.Up, fup)
+	b, err := ioutil.ReadFile(filepath.Join(path, upFile))
 
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = io.Copy(r.Down, fdown)
+	r.Up = sql.NullString{
+		String: string(b),
+		Valid:  true,
+	}
+
+	b, err = ioutil.ReadFile(filepath.Join(path, downFile))
 
 	if err != nil {
 		return nil, err
 	}
 
-	messageBuf := &bytes.Buffer{}
+	r.Down = sql.NullString{
+		String: string(b),
+		Valid:  true,
+	}
 
-	fmessage, err = os.Open(filepath.Join(path, messageFile))
+	buf := &bytes.Buffer{}
+
+	f, err := os.Open(filepath.Join(path, messageFile))
 
 	if err != nil {
 		return nil, err
 	}
 
-	defer fmessage.Close()
+	defer f.Close()
 
-	s := bufio.NewScanner(fmessage)
-
+	s := bufio.NewScanner(f)
 	s.Scan()
 
 	line := s.Text()
@@ -198,8 +186,8 @@ func resolveFromPath(path string) (*Revision, error) {
 	}
 
 	for s.Scan() {
-		messageBuf.Write(s.Bytes())
-		messageBuf.Write([]byte{'\n'})
+		buf.Write(s.Bytes())
+		buf.Write([]byte{'\n'})
 	}
 
 	if err != nil {
@@ -209,7 +197,7 @@ func resolveFromPath(path string) (*Revision, error) {
 	parts := strings.Split(line, ":")
 
 	r.Author = strings.TrimSpace(parts[1])
-	r.Message = strings.TrimSuffix(messageBuf.String(), "\n")
+	r.Message = strings.TrimSuffix(buf.String(), "\n")
 
 	return r, nil
 }
@@ -245,13 +233,13 @@ func (r *Revision) GenHash() error {
 	l := 0
 
 	if r.Direction == Up {
-		l = r.Up.Len()
-		b = r.Up.Bytes()
+		l = len(r.Up.String)
+		b = []byte(r.Up.String)
 	}
 
 	if r.Direction == Down {
-		l = r.Down.Len()
-		b = r.Down.Bytes()
+		l = len(r.Down.String)
+		b = []byte(r.Down.String)
 	}
 
 	tmp := make([]byte, l, l)
@@ -271,22 +259,8 @@ func (r *Revision) GenHash() error {
 	return nil
 }
 
-// Revisions returned from the database log will not have the Message, up, or down properties
-// populated. The Load method will populate these properties by looking up the revision on the
-// filesystem.
-func (r *Revision) Load() error {
-	realrev, err := Find(strconv.FormatInt(r.ID, 10))
-
-	if err != nil {
-		return err
-	}
-
-	r.Up = realrev.Up
-	r.Down = realrev.Down
-
-	return nil
-}
-
+// Split the subject of the message from the body, and return them as two
+// separate values.
 func (r Revision) SplitMessage() (string, string) {
 	s := bufio.NewScanner(strings.NewReader(r.Message))
 	s.Scan()
@@ -303,12 +277,12 @@ func (r Revision) SplitMessage() (string, string) {
 }
 
 func (r *Revision) Query() string {
-	if r.Direction == Up && r.Up.Len() != 0 {
-		return r.Up.String()
+	if r.Direction == Up && r.Up.Valid {
+		return r.Up.String
 	}
 
-	if r.Direction == Down && r.Down.Len() != 0 {
-		return r.Down.String()
+	if r.Direction == Down && r.Down.Valid {
+		return r.Down.String
 	}
 
 	return "---\n"

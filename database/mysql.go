@@ -10,6 +10,8 @@ func (db *DB) initMysql() error {
 			message    TEXT NOT NULL,
 			hash       BLOB NOT NULL,
 			direction  INT NOT NULL,
+			up         TEXT NULL,
+			down       TEXT NULL,
 			forced     TINYINT NOT NULL,
 			created_at TIMESTAMP NOT NULL
 		);
