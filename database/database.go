@@ -104,31 +104,35 @@ func Open(cfg *config.Config) (*DB, error) {
 				cfg.Database,
 			)
 
-			if cfg.SSL.Mode == "custom" {
+			if cfg.SSL.Mode != "" {
 				source += "?tls=" + cfg.SSL.Mode
 
-				pool := x509.NewCertPool()
+				if cfg.SSL.Mode == "custom" {
+					source += "?tls=" + cfg.SSL.Mode
 
-				pem, err := ioutil.ReadFile(cfg.SSL.Root)
+					pool := x509.NewCertPool()
 
-				if err != nil {
-					return nil, err
+					pem, err := ioutil.ReadFile(cfg.SSL.Root)
+
+					if err != nil {
+						return nil, err
+					}
+
+					if ok := pool.AppendCertsFromPEM(pem); !ok {
+						return nil, err
+					}
+
+					pair, err := tls.LoadX509KeyPair(cfg.SSL.Cert, cfg.SSL.Key)
+
+					if err != nil {
+						return nil, err
+					}
+
+					mysql.RegisterTLSConfig("custom", &tls.Config{
+						RootCAs:      pool,
+						Certificates: []tls.Certificate{pair},
+					})
 				}
-
-				if ok := pool.AppendCertsFromPEM(pem); !ok {
-					return nil, err
-				}
-
-				pair, err := tls.LoadX509KeyPair(cfg.SSL.Cert, cfg.SSL.Key)
-
-				if err != nil {
-					return nil, err
-				}
-
-				mysql.RegisterTLSConfig("custom", &tls.Config{
-					RootCAs:      pool,
-					Certificates: []tls.Certificate{pair},
-				})
 			}
 
 			break
