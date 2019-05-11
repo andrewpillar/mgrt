@@ -105,10 +105,10 @@ func Open(cfg *config.Config) (*DB, error) {
 			)
 
 			if cfg.SSL.Mode != "" {
-				source += "?tls=" + cfg.SSL.Mode
+				source += "&tls=" + cfg.SSL.Mode
 
 				if cfg.SSL.Mode == "custom" {
-					source += "?tls=" + cfg.SSL.Mode
+					source += "&tls=" + cfg.SSL.Mode
 
 					pool := x509.NewCertPool()
 

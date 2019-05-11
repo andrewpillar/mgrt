@@ -32,7 +32,7 @@ database:
 
 # SSL connection options.
 ssl:
-  mode: disable
+  mode:
   cert:
   key:
   root:
@@ -124,10 +124,6 @@ func Open() (*Config, error) {
 
 	if err := dec.Decode(cfg); err != nil {
 		return nil, err
-	}
-
-	if cfg.SSL.Mode == "" {
-		cfg.SSL.Mode = "disable"
 	}
 
 	return cfg, nil
