@@ -9,6 +9,7 @@ mgrt is a simple tool for managing revisions across SQL databases. It takes SQL 
 * [Performing a Revision](#performing-a-revision)
 * [Revision Log](#revision-log)
 * [Viewing Revisions](#viewing-revisions)
+* [SSL Connections](#ssl-connections)
 * [Working with Multiple Databases](#working-with-multiple-databases)
 
 ## Quick Start
@@ -250,6 +251,28 @@ $ mgrt cat 1136214245 --up | mysql ...
 ```
 
 `mgrt cat` takes a list of revision IDs for its arguments.
+
+## SSL Connections
+
+SSL connectivity can be configured in the `mgrt.yml` file via the `ssl` block of configuration options. The configuration for SSL connections will vary depending on the type of the database being connected to.
+
+### PostgreSQL
+
+`ssl.mode` for PostgreSQL takes one of the following values:
+
+* `disable` - Only try a non-SSL connection.
+* `require` - Only try an SSL connection. If a root CA file is present, verify the certificate in the same was as if `verify-ca` was specified.
+* `verify-full` - Only try an SSL connection, verify that the server certificate is issued by a trusted CA and that the requested server host name matches that in the certificate.
+
+### MySQL
+
+`ssl.mode` for MySQL takes one of the following values:
+
+* `false` - Only try a non-SSL connection.
+* `true` - Only try an SSL connection.
+* `skip-verify` - Only try an SSL connection without verification if you want to use a self-signed certificate.
+* `preferred` - Only try and SSL connection as advertised by the server.
+* `custom` - Use the given certificate, key, and root CA for the SSL connection.
 
 ## Working with Multiple Databases
 
