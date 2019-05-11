@@ -10,6 +10,8 @@ mgrt is a simple tool for managing revisions across SQL databases. It takes SQL 
 * [Revision Log](#revision-log)
 * [Viewing Revisions](#viewing-revisions)
 * [SSL Connections](#ssl-connections)
+  * [PostgreSQL](#postgresql)
+  * [MySQL](#mysql)
 * [Working with Multiple Databases](#working-with-multiple-databases)
 
 ## Quick Start
