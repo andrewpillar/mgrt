@@ -69,6 +69,10 @@ func Open(cfg *config.Config) (*DB, error) {
 
 			typ = Postgres
 
+			if cfg.SSL.Mode == "" {
+				cfg.SSL.Mode = "disable"
+			}
+
 			if cfg.SSL.Mode != "disable" {
 				if cfg.SSL.Cert != "" {
 					postgresSource += " sslcert=" + cfg.SSL.Cert
