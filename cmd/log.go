@@ -61,7 +61,7 @@ func Log(c cli.Command) {
 			fmt.Printf(" [FORCED]")
 		}
 
-		fmt.Printf("Date: %s\n", r.CreatedAt.Format("Mon Jan 02 15:04:05 2006"))
+		fmt.Printf("\nDate:     %s\n", r.CreatedAt.Format("Mon Jan 02 15:04:05 2006"))
 
 		if r.Message != "" {
 			subject, body := r.SplitMessage()
