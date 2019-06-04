@@ -30,29 +30,24 @@ Once installed you can create a new mgrt instance by running `mgrt init`.
 $ mgrt init
 ```
 
-Before we can start writing revisions, we need to set the author information in the `mgrt.yml` file.
+Before we can start writing revisions, we need to set the author information in the `mgrt.toml` file.
 
-```yaml
+```toml
 # The type of database, one of:
 #   - postgres
 #   - mysql
 #   - sqlite3
-type:
+type = ""
 
 # The database address, if SQLite then the filepath instead.
-address:
+address = ""
 
 # Login credentials for the user that will run the revisions.
-username:
-password:
+username = ""
+password = ""
 
 # Database to run the revisions against, if using SQLite then leave empty.
-database:
-
-# Details about the person creating the database revisions.
-author:
-  name: Andrew Pillar
-  email: andrewjohnpillar@gmail.com
+database = ""
 ```
 
 We can now begin with writing up revisions for mgrt to perform with the `mgrt add` command.
@@ -83,29 +78,24 @@ CREATE TABLE users (
 DROP TABLE users;
 ```
 
-We now have a revision. Before we can run it however, we need to configure the database connectivity. This is done in the `mgrt.yml` file. For our purposes we will be running the revisions against an SQLite database, so we only need to configure two properties, `type` and `address`.
+We now have a revision. Before we can run it however, we need to configure the database connectivity. This is done in the `mgrt.toml` file. For our purposes we will be running the revisions against an SQLite database, so we only need to configure two properties, `type` and `address`.
 
-```yaml
+```toml
 # The type of database, one of:
 #   - postgres
 #   - mysql
 #   - sqlite3
-type: sqlite3
+type = "sqlite3"
 
 # The database address, if SQLite then the filepath instead.
-address: db.sqlite
+address = "db.sqlite"
 
 # Login credentials for the user that will run the revisions.
-username:
-password:
+username = ""
+password = ""
 
 # Database to run the revisions against, if using SQLite then leave empty.
-database:
-
-# Details about the person creating the database revisions.
-author:
-  name: Andrew Pillar
-  email: andrewjohnpillar@gmail.com
+database = ""
 ```
 
 We can now perform our revisions against the database by running `mgrt run`.
@@ -135,7 +125,6 @@ Each revision that has been performed will be logged in the database. This log c
 ```
 $ mgrt log
 Revision: 1136214245 - 99121b9c2c88efdf77a0da709476e9f57b08d8423fa8af5046c140950ecbc18a
-Author:   Andrew Pillar <andrewjohnpillar@gmail.com>
 Date:     Mon Jan 02 15:04:05 2006
 
   Create users table
@@ -143,7 +132,6 @@ Date:     Mon Jan 02 15:04:05 2006
     DROP TABLE users;
 
 Revision: 1136214245 - 2d9d97a7e76b07c4636b45a7d3dfaa5a2586c2b0b6734cad4dd05438c96276d9
-Author:   Andrew Pillar <andrewjohnpillar@gmail.com>
 Date:     Mon Jan 02 15:04:05 2006
 
   Create users table
@@ -158,11 +146,11 @@ Date:     Mon Jan 02 15:04:05 2006
 
 A new mgrt instance can be initialized with `mgrt init`. This command takes on optional argument for the directory to initialize mgrt in. If that directory does not exist then it will be created.
 
-Once initialized there will be a directory, and a configuration file within the directory. The `revisions` directory stores the revisions, and the `mgrt.yml` configuration file contains information about the database you want to perform revisions against.
+Once initialized there will be a directory, and a configuration file within the directory. The `revisions` directory stores the revisions, and the `mgrt.toml` configuration file contains information about the database you want to perform revisions against.
 
 ## Configuration
 
-Configuring mgrt is simple. Depending on the database type you're running against, will depend on the configuration options that need to be set in the `mgrt.yml` file.
+Configuring mgrt is simple. Depending on the database type you're running against, will depend on the configuration options that need to be set in the `mgrt.toml` file.
 
 | Property | Purpose |
 |----------|---------|
@@ -171,8 +159,6 @@ Configuring mgrt is simple. Depending on the database type you're running agains
 | `username` | The username of the user performing the revisions. |
 | `password` | The password of the user performing the revisions. |
 | `database` | The database to perform the revisions on. |
-| `author.name` | The name of the person authoring the revisions. |
-| `author.email` | The email of the person authoring the revisions. |
 
 >**Note:** When preparing your database for mgrt to run against, ensure you do not have a table with the name of `mgrt_revisions`. This is the table used by mgrt for logging information about the performed revisions. You do not need to worry about creating this table, mgrt will do it for you when a revision is performed for the first time.
 
@@ -256,7 +242,7 @@ $ mgrt cat 1136214245 --up | mysql ...
 
 ## SSL Connections
 
-SSL connectivity can be configured in the `mgrt.yml` file via the `ssl` block of configuration options. The configuration for SSL connections will vary depending on the type of the database being connected to.
+SSL connectivity can be configured in the `mgrt.toml` file via the `ssl` block of configuration options. The configuration for SSL connections will vary depending on the type of the database being connected to.
 
 ### PostgreSQL
 
