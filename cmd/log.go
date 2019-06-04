@@ -3,6 +3,7 @@ package cmd
 import (
 	"bufio"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/andrewpillar/cli"
@@ -45,6 +46,10 @@ func Log(c cli.Command) {
 	}
 
 	if err != nil {
+		if strings.Contains(err.Error(), "no such table") {
+			os.Exit(1)
+		}
+
 		util.ExitError("failed to read revisions log", err)
 	}
 
