@@ -1,7 +1,6 @@
 package revision
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -44,7 +43,7 @@ func TestWalk(t *testing.T) {
 }
 
 func TestAdd(t *testing.T) {
-	r, err := Add("", "test", "test@example.com")
+	r, err := Add("")
 
 	if err != nil {
 		t.Errorf("failed to add revision: %s\n", err)
@@ -74,42 +73,6 @@ func TestAdd(t *testing.T) {
 		}
 	}
 
-	b, err := ioutil.ReadFile(r.MessagePath)
-
-	if err != nil {
-		t.Errorf("failed to read file: %s\n", err)
-		return
-	}
-
-	author := []byte("Author: test <test@example.com>\n")
-
-	if len(b) != len(author) {
-		t.Errorf(
-			"revision author does not match: expected = '%s', actual = '%s'\n",
-			string(author),
-			string(b),
-		)
-		return
-	}
-
-	authorMatch := true
-
-	for i := range author {
-		if b[i] != author[i] {
-			authorMatch = false
-			break
-		}
-	}
-
-	if !authorMatch {
-		t.Errorf(
-			"revision author does not match: expected = '%s', actual = '%s'\n",
-			string(author),
-			string(b),
-		)
-		return
-	}
-
 	if err := os.RemoveAll(path); err != nil {
 		t.Errorf("failed to clear test files: %s\n", err)
 	}
@@ -120,17 +83,6 @@ func TestFind(t *testing.T) {
 
 	if err != nil {
 		t.Errorf("failed to find revision: %s\n", err)
-		return
-	}
-
-	author := "test <test@example.com>"
-
-	if r.Author != author {
-		t.Errorf(
-			"revision author does not match: expected = '%s', actual = '%s'\n",
-			author,
-			r.Author,
-		)
 		return
 	}
 

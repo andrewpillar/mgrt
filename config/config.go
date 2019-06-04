@@ -5,11 +5,11 @@ import (
 	"os"
 	"path/filepath"
 
-	"gopkg.in/yaml.v2"
+	"github.com/pelletier/go-toml"
 )
 
 var (
-	file      = "mgrt.yml"
+	file      = "mgrt.toml"
 	revisions = "revisions"
 
 	stub = `
@@ -18,29 +18,24 @@ var (
 #   - postgres
 #   - mysql
 #   - sqlite3
-type:
+type = ""
 
-# The database address, if SQLite then the filepath instead.
-address:
+# The database addresss, if SQLite then the filepath instead.
+address = ""
 
-# Login credentials for the user that will run the revisions.
-username:
-password:
+# The database to perform the revisions against, if using SQLite then leave empty.
+database = ""
 
-# Database to run the revisions against, if using SQLite then leave empty.
-database:
+# Login credentials for the user that will perform the revisions.
+username = ""
+password = ""
 
-# SSL connection options.
-ssl:
-  mode:
-  cert:
-  key:
-  root:
-
-# Details about the person creating the database revisions.
-author:
-  name:
-  email:
+# SSL connection options, if required.
+[ssl]
+mode = ""
+cert = ""
+key  = ""
+root = ""
 `
 
 	Root string
@@ -63,11 +58,6 @@ type Config struct {
 		Cert string
 		Key  string
 		Root string
-	}
-
-	Author struct {
-		Name  string
-		Email string
 	}
 }
 
@@ -116,7 +106,7 @@ func Open() (*Config, error) {
 		return nil, err
 	}
 
-	dec := yaml.NewDecoder(f)
+	dec := toml.NewDecoder(f)
 
 	cfg := &Config{
 		File: f,

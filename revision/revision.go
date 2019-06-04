@@ -6,7 +6,6 @@ import (
 	"crypto/sha256"
 	"database/sql"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -35,7 +34,6 @@ type appendFunc func(revisions []*Revision, r *Revision) []*Revision
 
 type Revision struct {
 	ID        int64
-	Author    string
 	Message   string
 	Hash      [sha256.Size]byte
 	Direction Direction
@@ -49,7 +47,7 @@ type Revision struct {
 	DownPath    string
 }
 
-func Add(msg, name, email string) (*Revision, error) {
+func Add(msg string) (*Revision, error) {
 	id := time.Now().Unix()
 
 	path := filepath.Join(config.RevisionsDir(), strconv.FormatInt(id, 10))
@@ -87,10 +85,6 @@ func Add(msg, name, email string) (*Revision, error) {
 		return nil, err
 	}
 
-	author := fmt.Sprintf("%s <%s>", name, email)
-
-	_, err = fmt.Fprintf(f, "Author: %s\n", author)
-
 	if msg != "" {
 		_, err = f.Write([]byte(msg))
 
@@ -103,7 +97,6 @@ func Add(msg, name, email string) (*Revision, error) {
 
 	return &Revision{
 		ID:          id,
-		Author:      author,
 		Message:     msg,
 		MessagePath: messagePath,
 		DownPath:    downPath,
@@ -166,38 +159,13 @@ func resolveFromPath(path string) (*Revision, error) {
 		Valid:  true,
 	}
 
-	buf := &bytes.Buffer{}
-
-	f, err := os.Open(filepath.Join(path, messageFile))
+	b, err = ioutil.ReadFile(filepath.Join(path, messageFile))
 
 	if err != nil {
 		return nil, err
 	}
 
-	defer f.Close()
-
-	s := bufio.NewScanner(f)
-	s.Scan()
-
-	line := s.Text()
-
-	if !strings.HasPrefix(line, "Author:") {
-		return nil, errors.New("invalid revision: missing revision author")
-	}
-
-	for s.Scan() {
-		buf.Write(s.Bytes())
-		buf.Write([]byte{'\n'})
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	parts := strings.Split(line, ":")
-
-	r.Author = strings.TrimSpace(parts[1])
-	r.Message = strings.TrimSuffix(buf.String(), "\n")
+	r.Message = strings.TrimSuffix(string(b), "\n")
 
 	return r, nil
 }
@@ -227,7 +195,7 @@ func walk(f appendFunc) ([]*Revision, error) {
 }
 
 func (r *Revision) GenHash() error {
-	buf := bytes.NewBufferString(r.Author)
+	buf := &bytes.Buffer{}
 
 	b := []byte{}
 	l := 0

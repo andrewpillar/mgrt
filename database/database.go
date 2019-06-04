@@ -182,15 +182,15 @@ func (db *DB) Log(r *revision.Revision, forced bool) error {
 		case Postgres:
 			stmt, err = db.Prepare(`
 				INSERT INTO mgrt_revisions
-				(id, author, message, hash, direction, up, down, forced, created_at)
-				VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+				(id, message, hash, direction, up, down, forced, created_at)
+				VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 			`)
 			break
 		case MySQL:
 			stmt, err = db.Prepare(`
 				INSERT INTO mgrt_revisions
-				(id, author, message, hash, direction, up, down, forced, created_at)
-				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+				(id, message, hash, direction, up, down, forced, created_at)
+				VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 			`)
 			break
 		default:
@@ -210,7 +210,7 @@ func (db *DB) Log(r *revision.Revision, forced bool) error {
 		hash[i] = r.Hash[i]
 	}
 
-	_, err = stmt.Exec(r.ID, r.Author, r.Message, hash, r.Direction, r.Up, r.Down, forced, time.Now())
+	_, err = stmt.Exec(r.ID, r.Message, hash, r.Direction, r.Up, r.Down, forced, time.Now())
 
 	return err
 }
@@ -267,7 +267,6 @@ func (db *DB) realReadLog(query string) ([]*revision.Revision, error) {
 
 		err := rows.Scan(
 			&r.ID,
-			&r.Author,
 			&r.Message,
 			&hash,
 			&r.Direction,
