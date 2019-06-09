@@ -166,11 +166,7 @@ Configuring mgrt is simple. Depending on the database type you're running agains
 
 mgrt works by performing revisions against the given database. Each time a revision is performed a hash of that revision is stored in the database. This is to ensure that no modifications of that revision cannot be run. Revisions in mgrt are deliberately immutable like this, so as to ensure that a log of all changes made against the database can be kept.
 
-A new revision can be created by running `mgrt add`. This command takes the optional `-m` flag for specifying a message for the revision. If the `-m` flag is not specified, then mgrt will drop you into an editor, as specified via `$EDITOR`, for writing out the revision's message. This file will be pre-populated with your author information
-
-```
-Author: Andrew Pillar <andrewjohnpillar@gmail.com>
-```
+A new revision can be created by running `mgrt add`. This command takes the optional `-m` flag for specifying a message for the revision. If the `-m` flag is not specified, then mgrt will drop you into an editor, as specified via `$EDITOR`, for writing out the revision's message.
 
 Messages for revisions ought to be treated somewhat like commit messages in Git. Whereby the top line is the subject line of the revision, and the body is used as a means of justification for the revision itself.
 
