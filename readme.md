@@ -16,12 +16,12 @@ mgrt is a simple tool for managing revisions across SQL databases. It takes SQL 
 
 ## Quick Start
 
-mgrt can be installed via Go. Simply clone the repository and run `go install`.
+To install mgrt, clone the repository and run `make`.
 
 ```
 $ git clone https://github.com/andrewpillar/mgrt.git
 $ cd mgrt
-$ go install
+$ make
 ```
 
 Once installed you can create a new mgrt instance by running `mgrt init`.
