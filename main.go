@@ -11,6 +11,11 @@ import (
 	"github.com/andrewpillar/mgrt/util"
 )
 
+var (
+	Build string
+	Tag   string
+)
+
 func usageHandler(c cli.Command) {
 	if c.Name == "" {
 		fmt.Println(usage.Main)
@@ -29,6 +34,15 @@ func main() {
 		Exclusive: true,
 		Handler:   func(f cli.Flag, c cli.Command) {
 			usageHandler(c)
+		},
+	})
+
+	c.AddFlag(&cli.Flag{
+		Name:      "version",
+		Long:      "--version",
+		Exclusive: true,
+		Handler:   func(f cli.Flag, c cli.Command) {
+			fmt.Println("mgrt version", Tag, Build)
 		},
 	})
 
