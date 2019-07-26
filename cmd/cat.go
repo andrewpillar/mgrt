@@ -16,7 +16,7 @@ func Cat(c cli.Command) {
 	config.Root = c.Flags.GetString("config")
 
 	if err := config.Initialized(); err != nil {
-		util.ExitError("not initialize", err)
+		util.ExitError("not initialized", err)
 	}
 
 	if !c.Flags.IsSet("up") && !c.Flags.IsSet("down") {
