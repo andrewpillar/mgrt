@@ -98,9 +98,7 @@ func perform(c cli.Command, d revision.Direction) {
 			fmt.Printf("%s - %s: %d", d, err, r.ID)
 
 			if r.Message != "" {
-				subject, _ := r.SplitMessage()
-
-				fmt.Printf(": %s", subject)
+				fmt.Printf(": %s", r.Message)
 			}
 
 			fmt.Printf("\n")
@@ -114,9 +112,7 @@ func perform(c cli.Command, d revision.Direction) {
 		fmt.Printf("%s - performed revision: %d", d, r.ID)
 
 		if r.Message != "" {
-			subject, _ := r.SplitMessage()
-
-			fmt.Printf(": %s", subject)
+			fmt.Printf(": %s", r.Message)
 		}
 
 		fmt.Printf("\n")

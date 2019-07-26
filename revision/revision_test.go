@@ -1,113 +1,160 @@
 package revision
 
 import (
+	"fmt"
 	"os"
-	"path/filepath"
-	"strconv"
+	"regexp"
 	"testing"
 
 	"github.com/andrewpillar/mgrt/config"
 )
 
-func TestWalk(t *testing.T) {
-	revisions, err := walk(append_)
-
-	if err != nil {
-		t.Errorf("failed to walk revisions: %s\n", err)
-		return
+func TestFind(t *testing.T) {
+	tests := []struct{
+		id   string
+		msg  string
+		up   string
+		down string
+	}{
+		{
+			id:   "1136214245",
+			msg:  "Revision one",
+			up:   "CREATE TABLE example();\n",
+			down: "DROP TABLE example;\n",
+		},
+		{
+			id:  "1136214248",
+			up:   "CREATE TABLE example();\n",
+			down: "DROP TABLE example;\n",
+		},
 	}
 
-	expected := int64(1136214245)
+	for _, tst := range tests {
+		r, err := Find(tst.id)
 
-	if revisions[0].ID != expected {
-		t.Errorf(
-			"revision id does not match: expected = '%d', actual = '%d'\n",
-			expected,
-			revisions[0].ID,
-		)
-		return
-	}
+		if err != nil {
+			t.Fatal(err)
+		}
 
-	revisions, err = walk(prepend_)
+		if tst.msg != r.Message {
+			t.Errorf(
+				"revision message does not match\n\texpeced = '%s'\n\t  actual = '%s'\n",
+				tst.msg,
+				r.Message,
+			)
+		}
 
-	expected = int64(1136214247)
+		if tst.up != r.Up.String {
+			t.Errorf(
+				"revision up does not match\n\texpeced = '%s'\n\t  actual = '%s'\n",
+				tst.up,
+				r.Up.String,
+			)
+		}
 
-	if revisions[0].ID != expected {
-		t.Errorf(
-			"revision id does not match: expected = '%d', actual = '%d'\n",
-			expected,
-			revisions[0].ID,
-		)
-		return
+		if tst.down != r.Down.String {
+			t.Errorf(
+				"revision up does not match\n\texpeced = '%s'\n\t  actual = '%s'\n",
+				tst.down,
+				r.Down.String,
+			)
+		}
 	}
 }
 
 func TestAdd(t *testing.T) {
-	r, err := Add("")
-
-	if err != nil {
-		t.Errorf("failed to add revision: %s\n", err)
-		return
+	tests := []struct{
+		msg  string
+		path string
+	}{
+		{
+			msg:  "Test adding revision",
+			path: "^testdata/revisions/[0-9]+_test_adding_revision$",
+		},
+		{
+			msg:  "",
+			path: "^testdata/revisions/[0-9]+$",
+		},
 	}
 
-	path := filepath.Join(config.RevisionsDir(), strconv.FormatInt(r.ID, 10))
-
-	info, err := os.Stat(path)
-
-	if err != nil {
-		t.Errorf("failed to stat path: %s\n", err)
-		return
-	}
-
-	if !info.IsDir() {
-		t.Errorf("revision is not a directory\n")
-		return
-	}
-
-	for _, p := range []string{r.MessagePath, r.DownPath, r.UpPath} {
-		info, err = os.Stat(p)
+	for _, tst := range tests {
+		r, err := Add(tst.msg)
 
 		if err != nil {
-			t.Errorf("failed to stat path: %s\n", err)
-			return
+			t.Fatal(err)
 		}
-	}
 
-	if err := os.RemoveAll(path); err != nil {
-		t.Errorf("failed to clear test files: %s\n", err)
+		re := regexp.MustCompile(tst.path)
+
+		if !re.Match([]byte(r.path)) {
+			t.Errorf(
+				"revision path does not match pattern\n\texpected = '%s'\n\t  actual = '%s'\n",
+				tst.path,
+				r.path,
+			)
+		}
+
+		os.RemoveAll(r.path)
 	}
 }
 
-func TestFind(t *testing.T) {
+func TestOldest(t *testing.T) {
+	rr, err := Oldest()
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := int64(1136214245)
+
+	if rr[0].ID != expected {
+		t.Errorf(
+			"revision id does not match\n\texpected = '%d'\n\t  actual = '%d'\n",
+			expected,
+			rr[0].ID,
+		)
+	}
+}
+
+func TestLatest(t *testing.T) {
+	rr, err := Latest()
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := int64(1136214248)
+
+	if rr[0].ID != expected {
+		t.Errorf(
+			"revision id does not match\n\texpected = '%d'\n\t  actual = '%d'\n",
+			expected,
+			rr[0].ID,
+		)
+	}
+}
+
+func TestHash(t *testing.T) {
+	expected := "7b038fe74e91177f8daf2f05e06f95fe91b6904c8a4f651629999f783da4cdbe"
+
 	r, err := Find("1136214245")
 
 	if err != nil {
-		t.Errorf("failed to find revision: %s\n", err)
-		return
+		t.Fatal(err)
 	}
 
-	message := "Some message"
+	if err := r.GenHash(); err != nil {
+		t.Fatal(err)
+	}
 
-	if r.Message != message {
+	hash := fmt.Sprintf("%x", r.Hash)
+
+	if hash != expected {
 		t.Errorf(
-			"revision message does not match: expected = '%s', actual = '%s'\n",
-			message,
-			r.Message,
+			"revision hash does not match\n\texpected = '%s'\n\t  actual = '%s'\n",
+			expected,
+			hash,
 		)
-		return
-	}
-
-	up := "CREATE TABLE example();\n"
-	down := "DROP TABLE example;\n"
-
-	if r.Up.String != up {
-		t.Errorf("revision up does not match: expected = '%s', actual = '%s'\n", up, r.Up.String)
-		return
-	}
-
-	if r.Down.String != down {
-		t.Errorf("revision down does not match: expected = '%s', actual = '%s'\n", down, r.Down.String)
-		return
 	}
 }
 

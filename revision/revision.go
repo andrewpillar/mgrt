@@ -1,7 +1,6 @@
 package revision
 
 import (
-	"bufio"
 	"bytes"
 	"crypto/sha256"
 	"database/sql"
@@ -9,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -19,7 +19,9 @@ import (
 var (
 	upFile      = "up.sql"
 	downFile    = "down.sql"
-	messageFile = "_message"
+
+	reslug = regexp.MustCompile("[^a-zA-Z0-9]")
+	redup  = regexp.MustCompile("-{2,}")
 
 	append_ = func(revisions []*Revision, r *Revision) []*Revision {
 		return append(revisions, r)
@@ -33,6 +35,8 @@ var (
 type appendFunc func(revisions []*Revision, r *Revision) []*Revision
 
 type Revision struct {
+	path string
+
 	ID        int64
 	Message   string
 	Hash      [sha256.Size]byte
@@ -41,79 +45,8 @@ type Revision struct {
 	Down      sql.NullString
 	Forced    bool
 	CreatedAt *time.Time
-
-	MessagePath string
-	UpPath      string
-	DownPath    string
-}
-
-func Add(msg string) (*Revision, error) {
-	id := time.Now().Unix()
-
-	path := filepath.Join(config.RevisionsDir(), strconv.FormatInt(id, 10))
-
-	if err := os.MkdirAll(path, config.DirMode); err != nil {
-		return nil, err
-	}
-
-	upPath := filepath.Join(path, upFile)
-	downPath := filepath.Join(path, downFile)
-	messagePath := filepath.Join(path, messageFile)
-
-	var f *os.File
-	var err error
-
-	f, err = os.Create(upPath)
-
-	if err != nil {
-		return nil, err
-	}
-
-	f.Close()
-
-	f, err = os.Create(downPath)
-
-	if err != nil {
-		return nil, err
-	}
-
-	f.Close()
-
-	f, err = os.OpenFile(messagePath, os.O_CREATE|os.O_WRONLY, config.FileMode)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if msg != "" {
-		_, err = f.Write([]byte(msg))
-
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	f.Close()
-
-	return &Revision{
-		ID:          id,
-		Message:     msg,
-		MessagePath: messagePath,
-		DownPath:    downPath,
-		UpPath:      upPath,
-	}, nil
-}
-
-func Find(id string) (*Revision, error) {
-	return resolveFromPath(filepath.Join(config.RevisionsDir(), id))
-}
-
-func Oldest() ([]*Revision, error) {
-	return walk(append_)
-}
-
-func Latest() ([]*Revision, error) {
-	return walk(prepend_)
+	UpPath    string
+	DownPath  string
 }
 
 func resolveFromPath(path string) (*Revision, error) {
@@ -127,17 +60,24 @@ func resolveFromPath(path string) (*Revision, error) {
 		return nil, errors.New("invalid revision: not a directory: " + info.Name())
 	}
 
-	id, err := strconv.ParseInt(filepath.Base(path), 10, 64)
+	parts := strings.Split(filepath.Base(path), "_")
+
+	id, err := strconv.ParseInt(parts[0], 10, 64)
 
 	if err != nil {
 		return nil, errors.New("invalid revision: " + err.Error())
 	}
 
 	r := &Revision{
-		ID: id,
+		path: path,
+		ID:   id,
 	}
 
-	b, err := ioutil.ReadFile(filepath.Join(path, upFile))
+	if len(parts) > 1 {
+		r.Message = strings.Join(append([]string{strings.Title(parts[1])}, parts[2:]...), " ")
+	}
+
+	b, err := ioutil.ReadFile(filepath.Join(r.path, upFile))
 
 	if err != nil {
 		return nil, err
@@ -148,7 +88,7 @@ func resolveFromPath(path string) (*Revision, error) {
 		Valid:  true,
 	}
 
-	b, err = ioutil.ReadFile(filepath.Join(path, downFile))
+	b, err = ioutil.ReadFile(filepath.Join(r.path, downFile))
 
 	if err != nil {
 		return nil, err
@@ -158,14 +98,6 @@ func resolveFromPath(path string) (*Revision, error) {
 		String: string(b),
 		Valid:  true,
 	}
-
-	b, err = ioutil.ReadFile(filepath.Join(path, messageFile))
-
-	if err != nil {
-		return nil, err
-	}
-
-	r.Message = strings.TrimSuffix(string(b), "\n")
 
 	return r, nil
 }
@@ -192,6 +124,87 @@ func walk(f appendFunc) ([]*Revision, error) {
 	}
 
 	return revisions, nil
+}
+
+func Add(msg string) (*Revision, error) {
+	id := time.Now().Unix()
+
+	slug := redup.ReplaceAllString(reslug.ReplaceAllString(strings.TrimSpace(msg), "_"), "_")
+
+	path := filepath.Join(config.RevisionsDir(), strconv.FormatInt(id, 10))
+
+	if slug != "" {
+		path += "_" + strings.ToLower(slug)
+	}
+
+	if err := os.MkdirAll(path, config.DirMode); err != nil {
+		return nil, err
+	}
+
+	upPath := filepath.Join(path, upFile)
+	downPath := filepath.Join(path, downFile)
+
+	var (
+		f   *os.File
+		err error
+	)
+
+	f, err = os.Create(upPath)
+
+	if err != nil {
+		return nil, err
+	}
+
+	f.Close()
+
+	f, err = os.Create(downPath)
+
+	if err != nil {
+		return nil, err
+	}
+
+	f.Close()
+
+	return &Revision{
+		path:     path,
+		ID:       id,
+		Message:  msg,
+		DownPath: downPath,
+		UpPath:   upPath,
+	}, nil
+}
+
+func Find(id string) (*Revision, error) {
+	dir := config.RevisionsDir()
+
+	infos, err := ioutil.ReadDir(dir)
+
+	if err != nil {
+		return nil, err
+	}
+
+	base := ""
+
+	for _, info := range infos {
+		name := info.Name()
+
+		parts := strings.Split(name, "_")
+
+		if parts[0] == id {
+			base = name
+			break
+		}
+	}
+
+	return resolveFromPath(filepath.Join(config.RevisionsDir(), base))
+}
+
+func Oldest() ([]*Revision, error) {
+	return walk(append_)
+}
+
+func Latest() ([]*Revision, error) {
+	return walk(prepend_)
 }
 
 func (r *Revision) GenHash() error {
@@ -225,23 +238,6 @@ func (r *Revision) GenHash() error {
 	}
 
 	return nil
-}
-
-// Split the subject of the message from the body, and return them as two
-// separate values.
-func (r Revision) SplitMessage() (string, string) {
-	s := bufio.NewScanner(strings.NewReader(r.Message))
-	s.Scan()
-
-	subject := s.Text()
-	body := &bytes.Buffer{}
-
-	for s.Scan() {
-		body.Write(s.Bytes())
-		body.Write([]byte{'\n'})
-	}
-
-	return subject, body.String()
 }
 
 func (r *Revision) Query() string {

@@ -3,7 +3,6 @@ package util
 import (
 	"fmt"
 	"os"
-	"os/exec"
 )
 
 func ExitError(msg string, err error) {
@@ -23,13 +22,4 @@ func ExitError(msg string, err error) {
 
 	fmt.Fprintf(os.Stderr, "\n")
 	os.Exit(1)
-}
-
-func OpenInEditor(path string) {
-	cmd := exec.Command(os.Getenv("EDITOR"), path)
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	cmd.Run()
 }

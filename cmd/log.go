@@ -69,15 +69,7 @@ func Log(c cli.Command) {
 		fmt.Printf("\nDate:     %s\n", r.CreatedAt.Format("Mon Jan 02 15:04:05 2006"))
 
 		if r.Message != "" {
-			subject, body := r.SplitMessage()
-
-			fmt.Printf("\n  %s\n", subject)
-
-			s := bufio.NewScanner(strings.NewReader(body))
-
-			for s.Scan() {
-				fmt.Printf("  %s\n", s.Text())
-			}
+			fmt.Printf("\n  %s\n", r.Message)
 		}
 
 		s := bufio.NewScanner(strings.NewReader(r.Query()))
