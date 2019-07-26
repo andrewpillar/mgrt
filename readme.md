@@ -30,27 +30,7 @@ Once installed you can create a new mgrt instance by running `mgrt init`.
 $ mgrt init
 ```
 
-Before we can start writing revisions, we need to set the author information in the `mgrt.toml` file.
-
-```toml
-# The type of database, one of:
-#   - postgres
-#   - mysql
-#   - sqlite3
-type = ""
-
-# The database address, if SQLite then the filepath instead.
-address = ""
-
-# Login credentials for the user that will run the revisions.
-username = ""
-password = ""
-
-# Database to run the revisions against, if using SQLite then leave empty.
-database = ""
-```
-
-We can now begin with writing up revisions for mgrt to perform with the `mgrt add` command.
+A revision is created by invoking the `mgrt add` command.
 
 ```
 $ mgrt add -m "Create users table"
@@ -106,7 +86,6 @@ up - performed revision: 1136214245: Create users table
 ```
 
 This will read in the contents of the `up.sql` file on each revision we have, and run it against the database. If we try running `mgrt run` again, the revision will not be performed because it was already run once.
-
 
 ```
 $ mgrt run
@@ -228,7 +207,7 @@ This can be useful if you want to debug any erroneously written queries you have
 $ mgrt cat 1136214245 --up | mysql ...
 ```
 
-`mgrt cat` takes a list of revision IDs for its arguments.
+`mgrt cat` takes a list of revision IDs for the arguments.
 
 ## SSL Connections
 
