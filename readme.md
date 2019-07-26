@@ -55,8 +55,8 @@ We can now begin with writing up revisions for mgrt to perform with the `mgrt ad
 ```
 $ mgrt add -m "Create users table"
 added new revision at:
-  revisions/1136214245/up.sql
-  revisions/1136214245/down.sql
+  revisions/1136214245_create_users_table/up.sql
+  revisions/1136214245_create_users_table/down.sql
 ```
 
 mgrt will create a directory named for the revision's ID, and populate it with some files, a `_message` file containing the message we passed with `-m`, and the SQL files that will contain the up/down logic for the revision.
@@ -126,15 +126,13 @@ Each revision that has been performed will be logged in the database. This log c
 $ mgrt log
 Revision: 1136214245 - 99121b9c2c88efdf77a0da709476e9f57b08d8423fa8af5046c140950ecbc18a
 Date:     Mon Jan 02 15:04:05 2006
-
-  Create users table
+Message:  Create users table
 
     DROP TABLE users;
 
 Revision: 1136214245 - 2d9d97a7e76b07c4636b45a7d3dfaa5a2586c2b0b6734cad4dd05438c96276d9
 Date:     Mon Jan 02 15:04:05 2006
-
-  Create users table
+Message:  Create users table
 
     CREATE TABLE users (
         email    TEXT UNIQUE NOT NULL,
@@ -191,18 +189,14 @@ This log can be viewed with the `mgrt log` command.
 ```
 $ mgrt log
 Revision: 1136214245 - 99121b9c2c88efdf77a0da709476e9f57b08d8423fa8af5046c140950ecbc18a
-Author:   Andrew Pillar <andrewjohnpillar@gmail.com>
 Date:     Mon Jan 02 15:04:05 2006
-
-  Create users table
+Message:  Create users table
 
     DROP TABLE users;
 
 Revision: 1136214245 - 2d9d97a7e76b07c4636b45a7d3dfaa5a2586c2b0b6734cad4dd05438c96276d9
-Author:   Andrew Pillar <andrewjohnpillar@gmail.com>
 Date:     Mon Jan 02 15:04:05 2006
-
-  Create users table
+Message:  Create users table
 
     CREATE TABLE users (
         email    TEXT UNIQUE NOT NULL,
