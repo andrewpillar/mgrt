@@ -39,11 +39,11 @@ added new revision at:
   revisions/1136214245_create_users_table/down.sql
 ```
 
-mgrt will create a directory named for the revision's ID, plus the message if one is present, and populate it the SQL files that will contain the up/down logic for the revision.
+mgrt will create a directory named for the revision's ID, plus the message if one is present, and populate it with the SQL files that will contain the up/down logic for the revision.
 
 Writing the revision is as simple as editing the newly created SQL files.
 
-`up.sql`:
+`revisions/1136214245_create_users_table/up.sql`:
 
 ```sql
 CREATE TABLE users (
@@ -52,7 +52,7 @@ CREATE TABLE users (
 );
 ```
 
-`down.sql`:
+`revisions/1136214245_create_users_table/down.sql`:
 
 ```sql
 DROP TABLE users;
