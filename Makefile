@@ -1,14 +1,16 @@
 BUILD := `git rev-parse HEAD`
 TAG   := `git describe --abbrev=0`
 
-LDFLAGS := -ldflags "-X main.Build=$(BUILD) -X main.Tag=$(TAG)"
+TAGS    := "netgo osusergo"
+LFLAGS  := -ldflags "-X main.Build=$(BUILD) -X main.Tag=$(TAG)"
 
-.PHONY: all test install
+.PHONY: build test install
 
-all: install
+all: build
+
+build:
+	go build $(LFLAGS) -tags $(TAGS) -o mgrt.out
+	go build $(LFLAGS) -tags sqlite3 -o mgrt-sqlite3.out
 
 test:
 	go test -v -cover ./...
-
-install: test
-	go install $(LDFLAGS)
