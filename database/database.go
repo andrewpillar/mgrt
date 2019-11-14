@@ -1,202 +1,57 @@
 package database
 
 import (
-	"crypto/tls"
-	"crypto/x509"
 	"database/sql"
 	"errors"
-	"fmt"
-	"io/ioutil"
-	"net"
 	"strings"
 	"time"
 
 	"github.com/andrewpillar/mgrt/config"
 	"github.com/andrewpillar/mgrt/revision"
-
-	"github.com/go-sql-driver/mysql"
-
-	_ "github.com/lib/pq"
-	_ "github.com/mattn/go-sqlite3"
-)
-
-const (
-	SQLite3 Type = iota
-	Postgres
-	MySQL
 )
 
 var (
+	databases = make(map[string]DB)
+
 	ErrInitialized      = errors.New("database already initialized")
 	ErrAlreadyPerformed = errors.New("already performed revision")
 	ErrCheckHashFailed  = errors.New("revision hash check failed")
-
-	postgresSource = "host=%s port=%s user=%s dbname=%s password=%s sslmode=%s"
-	mysqlSource    = "%s:%s@%s/%s?parseTime=true"
 )
 
-type Type uint32
-
-type DB struct {
+type database struct {
 	*sql.DB
-
-	Type Type
 }
 
-func Open(cfg *config.Config) (*DB, error) {
-	if cfg.Type == "sqlite3" {
-		db, err := sql.Open(cfg.Type, cfg.Address)
+type DB interface {
+	Open(cfg *config.Config) error
 
-		if err != nil {
-			return nil, err
-		}
+	Init() error
 
-		return &DB{DB: db, Type: SQLite3}, nil
-	}
+	Perform(r *revision.Revision, forced bool) error
 
-	var (
-		typ    Type
-		source string
-	)
+	Log(r *revision.Revision, forced bool) error
 
-	switch cfg.Type {
-		case "postgres":
-			host, port, err := net.SplitHostPort(cfg.Address)
+	ReadLog(ids ...string) ([]*revision.Revision, error)
 
-			if err != nil {
-				return nil, err
-			}
+	ReadLogReverse(ids ...string) ([]*revision.Revision, error)
 
-			typ = Postgres
-
-			if cfg.SSL.Mode == "" {
-				cfg.SSL.Mode = "disable"
-			}
-
-			if cfg.SSL.Mode != "disable" {
-				if cfg.SSL.Cert != "" {
-					postgresSource += " sslcert=" + cfg.SSL.Cert
-				}
-
-				if cfg.SSL.Key != "" {
-					postgresSource += " sslkey=" + cfg.SSL.Key
-				}
-
-				if cfg.SSL.Root != "" {
-					postgresSource += " sslrootcert=" + cfg.SSL.Root
-				}
-			}
-
-			source = fmt.Sprintf(
-				postgresSource,
-				host,
-				port,
-				cfg.Username,
-				cfg.Database,
-				cfg.Password,
-				cfg.SSL.Mode,
-			)
-			break
-		case "mysql":
-			typ = MySQL
-
-			source = fmt.Sprintf(
-				mysqlSource,
-				cfg.Username,
-				cfg.Password,
-				cfg.Address,
-				cfg.Database,
-			)
-
-			if cfg.SSL.Mode != "" {
-				source += "&tls=" + cfg.SSL.Mode
-
-				if cfg.SSL.Mode == "custom" {
-					source += "&tls=" + cfg.SSL.Mode
-
-					pool := x509.NewCertPool()
-
-					pem, err := ioutil.ReadFile(cfg.SSL.Root)
-
-					if err != nil {
-						return nil, err
-					}
-
-					if ok := pool.AppendCertsFromPEM(pem); !ok {
-						return nil, err
-					}
-
-					pair, err := tls.LoadX509KeyPair(cfg.SSL.Cert, cfg.SSL.Key)
-
-					if err != nil {
-						return nil, err
-					}
-
-					mysql.RegisterTLSConfig("custom", &tls.Config{
-						RootCAs:      pool,
-						Certificates: []tls.Certificate{pair},
-					})
-				}
-			}
-
-			break
-		default:
-			return nil, errors.New("unknown database type " + cfg.Type)
-	}
-
-	db, err := sql.Open(cfg.Type, source)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if err := db.Ping(); err != nil {
-		return nil, err
-	}
-
-	return &DB{DB: db, Type: typ}, nil
+	Close() error
 }
 
-func (db *DB) Init() error {
-	switch db.Type {
-		case SQLite3:
-			return db.initSqlite3()
-		case Postgres:
-			return db.initPostgres()
-		case MySQL:
-			return db.initMysql()
-		default:
-			return errors.New("unknown database type")
+func Open(cfg *config.Config) (DB, error) {
+	db, ok := databases[cfg.Type]
+
+	if !ok {
+		return nil, errors.New("unknown database type: " + cfg.Type)
 	}
+
+	err := db.Open(cfg)
+
+	return db, err
 }
 
-func (db *DB) Log(r *revision.Revision, forced bool) error {
-	var (
-		stmt *sql.Stmt
-		err  error
-	)
-
-	switch db.Type {
-		case SQLite3:
-			fallthrough
-		case Postgres:
-			stmt, err = db.Prepare(`
-				INSERT INTO mgrt_revisions
-				(id, message, hash, direction, up, down, forced, created_at)
-				VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-			`)
-			break
-		case MySQL:
-			stmt, err = db.Prepare(`
-				INSERT INTO mgrt_revisions
-				(id, message, hash, direction, up, down, forced, created_at)
-				VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-			`)
-			break
-		default:
-			err = errors.New("unknown database type")
-			break
-	}
+func (db *database) log(r *revision.Revision, forced bool, query string) error {
+	stmt, err := db.Prepare(query)
 
 	if err != nil {
 		return err
@@ -215,7 +70,7 @@ func (db *DB) Log(r *revision.Revision, forced bool) error {
 	return err
 }
 
-func (db *DB) ReadLogReverse(ids ...string) ([]*revision.Revision, error) {
+func (db *database) ReadLogReverse(ids ...string) ([]*revision.Revision, error) {
 	query := "SELECT * FROM mgrt_revisions"
 
 	if len(ids) > 0 {
@@ -227,7 +82,7 @@ func (db *DB) ReadLogReverse(ids ...string) ([]*revision.Revision, error) {
 	return db.realReadLog(query)
 }
 
-func (db *DB) ReadLog(ids ...string) ([]*revision.Revision, error) {
+func (db *database) ReadLog(ids ...string) ([]*revision.Revision, error) {
 	query := "SELECT * FROM mgrt_revisions"
 
 	if len(ids) > 0 {
@@ -239,7 +94,7 @@ func (db *DB) ReadLog(ids ...string) ([]*revision.Revision, error) {
 	return db.realReadLog(query)
 }
 
-func (db *DB) realReadLog(query string) ([]*revision.Revision, error) {
+func (db *database) realReadLog(query string) ([]*revision.Revision, error) {
 	stmt, err := db.Prepare(query)
 
 	if err != nil {
@@ -290,103 +145,62 @@ func (db *DB) realReadLog(query string) ([]*revision.Revision, error) {
 	return revisions, nil
 }
 
-func (db *DB) Perform(r *revision.Revision, force bool) error {
-	var (
-		stmt *sql.Stmt
-		err  error
-	)
+func (db *database) Close() error {
+	return db.DB.Close()
+}
 
-	switch db.Type {
-		case SQLite3:
-			fallthrough
-		case Postgres:
-			stmt, err = db.Prepare(`
-				SELECT id, hash, direction
-				FROM mgrt_revisions WHERE id = $1
-				ORDER BY created_at DESC LIMIT 1
-			`)
-			break
-		case MySQL:
-			stmt, err = db.Prepare(`
-				SELECT id, hash, direction
-				FROM mgrt_revisions WHERE id = ?
-				ORDER BY created_at DESC LIMIT 1
-			`)
-			break
-		default:
-			err = errors.New("unknown database type")
-			break
-	}
+func (db *database) perform(r *revision.Revision, forced bool, lastQuery, hashQuery string) error {
+	lastStmt, err := db.Prepare(lastQuery)
 
 	if err != nil {
 		return err
 	}
 
-	defer stmt.Close()
+	defer lastStmt.Close()
 
 	var (
 		prev revision.Revision
 		hash []byte
 	)
 
-	err = stmt.QueryRow(r.ID).Scan(&prev.ID, &hash, &prev.Direction)
+	err = lastStmt.QueryRow(r.ID).Scan(&prev.ID, &hash, &prev.Direction)
 
-	if err == sql.ErrNoRows {
-		_, err = db.Exec(r.Query())
+	if err != nil {
+		if err == sql.ErrNoRows {
+			_, err = db.Exec(r.Query())
+
+			return err
+		}
 
 		return err
-	}
-
-	for i := range prev.Hash {
-		prev.Hash[i] = hash[i]
 	}
 
 	if r.Direction == prev.Direction {
 		return ErrAlreadyPerformed
 	}
 
-	// Get the hash for the last time this revision was performed for the
-	// hash check.
-	switch db.Type {
-		case SQLite3:
-			fallthrough
-		case Postgres:
-			stmt, err = db.Prepare(`
-				SELECT hash
-				FROM mgrt_revisions
-				WHERE id = $1 AND direction = $2 AND forced = false
-				ORDER BY created_at DESC LIMIT 1
-			`)
-		case MySQL:
-			stmt, err = db.Prepare(`
-				SELECT hash
-				FROM mgrt_revisions
-				WHERE id = ? AND direction = ? AND forced = false
-				ORDER BY created_at DESC LIMIT 1
-			`)
-		default:
-			err = errors.New("unknown database type")
-			break
-	}
+	hashStmt, err := db.Prepare(hashQuery)
 
 	if err != nil {
 		return err
 	}
 
-	err = stmt.QueryRow(r.ID, r.Direction).Scan(&hash)
+	defer hashStmt.Close()
 
-	if err == sql.ErrNoRows {
-		_, err = db.Exec(r.Query())
-
-		return err
-	}
+	err = hashStmt.QueryRow(r.ID, r.Direction).Scan(&hash)
 
 	if err != nil {
+		if err == sql.ErrNoRows {
+			_, err = db.Exec(r.Query())
+
+			return err
+		}
+
 		return err
 	}
 
 	for i := range hash {
-		if hash[i] != r.Hash[i] && !force {
+		if hash[i] != r.Hash[i] && !forced {
 			return ErrCheckHashFailed
 		}
 	}
