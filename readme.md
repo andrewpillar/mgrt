@@ -25,6 +25,10 @@ $ cd mgrt
 $ make
 ```
 
+This will produce two binaries, one named `mgrt.out`, and the other `mgrt-sqlite3.out`. The former
+is a statically linked binary, and the latter is a dynamically linked binary with support for
+SQLite3. Place the one you would like to use into your `$PATH`.
+
 Once installed you can create a new mgrt instance by running `mgrt init`.
 
 ```
