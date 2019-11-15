@@ -13,4 +13,4 @@ build:
 	go build $(LFLAGS) -tags sqlite3 -o mgrt-sqlite3.out
 
 test:
-	go test -v -cover ./...
+	go test -v -cover ./... -tags sqlite3

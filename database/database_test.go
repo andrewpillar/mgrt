@@ -13,7 +13,7 @@ import (
 
 var revisionId = "1136214245"
 
-func performRevisions(db *DB, t *testing.T) {
+func performRevisions(db DB, realDB *sql.DB, t *testing.T) {
 	if err := db.Init(); err != nil && err != ErrInitialized {
 		t.Errorf("failed to initialize database: %s\n", err)
 	}
@@ -43,7 +43,7 @@ func performRevisions(db *DB, t *testing.T) {
 
 	var count int64
 
-	row := db.QueryRow("SELECT COUNT(*) FROM mgrt_revisions")
+	row := realDB.QueryRow("SELECT COUNT(*) FROM mgrt_revisions")
 	row.Scan(&count)
 
 	if count != int64(1) {
@@ -52,7 +52,7 @@ func performRevisions(db *DB, t *testing.T) {
 	}
 
 	// Check to see if the revision performed, and the example table exists.
-	_, err = db.Query("INSERT INTO example (id) VALUES (1)")
+	_, err = realDB.Query("INSERT INTO example (id) VALUES (1)")
 
 	if err != nil {
 		t.Errorf("failed to insert test record: %s\n", err)
@@ -106,20 +106,21 @@ func TestPerformMySQL(t *testing.T) {
 		t.Skip("skipping mysql tests: MYSQLSOURCE not set\n")
 	}
 
-	sqlDB, err := sql.Open("mysql", mysqlsrc)
+	db, err := sql.Open("mysql", mysqlsrc)
 
 	if err != nil {
 		t.Errorf("failed to open mysql database: %s\n", err)
 	}
 
-	db := &DB{
-		DB:   sqlDB,
-		Type: MySQL,
-	}
-
 	defer db.Close()
 
-	performRevisions(db, t)
+	imp := &MySQL{
+		database: &database{
+			DB: db,
+		},
+	}
+
+	performRevisions(imp, db, t)
 }
 
 func TestPerformPostgresql(t *testing.T) {
@@ -129,29 +130,25 @@ func TestPerformPostgresql(t *testing.T) {
 		t.Skip("skipping postgresql tests: PGSOURCE not set\n")
 	}
 
-	sqlDB, err := sql.Open("postgres", pgsrc)
+	db, err := sql.Open("postgres", pgsrc)
 
 	if err != nil {
 		t.Errorf("failed to open postgresql database: %s\n", err)
 	}
 
-	db := &DB{
-		DB:   sqlDB,
-		Type: Postgres,
-	}
-
 	defer db.Close()
 
-	performRevisions(db, t)
+	imp := &Postgres{
+		database: &database{
+			DB: db,
+		},
+	}
+
+	performRevisions(imp, db, t)
 }
 
 func TestPerformSqlite3(t *testing.T) {
-	cfg := &config.Config{
-		Type:    "sqlite3",
-		Address: "test.sqlite3",
-	}
-
-	db, err := Open(cfg)
+	db, err := sql.Open("sqlite3", "test.sqlite3")
 
 	if err != nil {
 		t.Errorf("failed to open sqlite3 database: %s\n", err)
@@ -160,7 +157,13 @@ func TestPerformSqlite3(t *testing.T) {
 	defer os.Remove("test.sqlite3")
 	defer db.Close()
 
-	performRevisions(db, t)
+	imp := &SQLite3{
+		database: &database{
+			DB: db,
+		},
+	}
+
+	performRevisions(imp, db, t)
 }
 
 func TestMain(m *testing.M) {
