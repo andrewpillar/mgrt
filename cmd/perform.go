@@ -84,5 +84,8 @@ func perform(c cli.Command, d revision.Direction) {
 
 	force := c.Flags.IsSet("force")
 
-	migration.Perform(db, revisions, d, force)
+	err = migration.Perform(db, revisions, d, force)
+	if err != nil {
+		util.ExitError("failed to perform revision ", err)
+	}
 }

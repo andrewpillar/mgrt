@@ -1,25 +1,24 @@
-package migrate
+package migration
 
 import (
 	"fmt"
 
 	"github.com/andrewpillar/mgrt/database"
 	"github.com/andrewpillar/mgrt/revision"
-	"github.com/andrewpillar/mgrt/util"
 )
 
-func Perform(db database.DB, revisions []*revision.Revision, d revision.Direction, force bool) {
+func Perform(db database.DB, revisions []*revision.Revision, d revision.Direction, force bool) error {
 	for _, r := range revisions {
 
 		r.Direction = d
 
 		if err := r.GenHash(); err != nil {
-			util.ExitError("failed to perform revision", err)
+			return err
 		}
 
 		if err := db.Perform(r, force); err != nil {
 			if err != database.ErrAlreadyPerformed {
-				util.ExitError("failed to perform revision", fmt.Errorf("%s: %d", err, r.ID))
+				return fmt.Errorf("%s: %d", err, r.ID)
 			}
 
 			fmt.Printf("%s - %s: %d", d, err, r.ID)
@@ -33,7 +32,7 @@ func Perform(db database.DB, revisions []*revision.Revision, d revision.Directio
 		}
 
 		if err := db.Log(r, force); err != nil {
-			util.ExitError("failed to log revision", err)
+			return err
 		}
 
 		fmt.Printf("%s - performed revision: %d", d, r.ID)
@@ -44,4 +43,5 @@ func Perform(db database.DB, revisions []*revision.Revision, d revision.Directio
 
 		fmt.Printf("\n")
 	}
+	return nil
 }
