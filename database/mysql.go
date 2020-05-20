@@ -55,6 +55,12 @@ func init() {
 	databases["mysql"] = &MySQL{}
 }
 
+func (p *MySQL) FromConn(db *sql.DB) {
+	p.database = &database{
+		DB: db,
+	}
+}
+
 func (m *MySQL) Open(cfg *config.Config) error {
 	dsn := fmt.Sprintf(mysqlDsn, cfg.Username, cfg.Password, cfg.Address, cfg.Database)
 

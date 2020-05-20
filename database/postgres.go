@@ -52,6 +52,12 @@ func init() {
 	databases["postgres"] = &Postgres{}
 }
 
+func (p *Postgres) FromConn(db *sql.DB) {
+	p.database = &database{
+		DB: db,
+	}
+}
+
 func (p *Postgres) Open(cfg *config.Config) error {
 	host, port, err := net.SplitHostPort(cfg.Address)
 

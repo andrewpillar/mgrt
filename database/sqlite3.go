@@ -32,6 +32,12 @@ func init() {
 	databases["sqlite3"] = &SQLite3{}
 }
 
+func (p *SQLite3) FromConn(db *sql.DB) {
+	p.database = &database{
+		DB: db,
+	}
+}
+
 func (s *SQLite3) Open(cfg *config.Config) error {
 	db, err := sql.Open("sqlite3", cfg.Address)
 
