@@ -9,6 +9,7 @@ import (
 
 	"github.com/andrewpillar/mgrt/config"
 	"github.com/andrewpillar/mgrt/database"
+	"github.com/andrewpillar/mgrt/migration"
 	"github.com/andrewpillar/mgrt/revision"
 	"github.com/andrewpillar/mgrt/util"
 )
@@ -34,15 +35,15 @@ func loadRevisions(c cli.Command, d revision.Direction) ([]*revision.Revision, e
 	var err error
 
 	switch d {
-		case revision.Up:
-			revisions, err = revision.Oldest()
-			break
-		case revision.Down:
-			revisions, err = revision.Latest()
-			break
-		default:
-			err = errors.New("unknown direction")
-			break
+	case revision.Up:
+		revisions, err = revision.Oldest()
+		break
+	case revision.Down:
+		revisions, err = revision.Latest()
+		break
+	default:
+		err = errors.New("unknown direction")
+		break
 	}
 
 	return revisions, err
@@ -83,38 +84,8 @@ func perform(c cli.Command, d revision.Direction) {
 
 	force := c.Flags.IsSet("force")
 
-	for _, r := range revisions {
-		r.Direction = d
-
-		if err := r.GenHash(); err != nil {
-			util.ExitError("failed to perform revision", err)
-		}
-
-		if err := db.Perform(r, force); err != nil {
-			if err != database.ErrAlreadyPerformed {
-				util.ExitError("failed to perform revision", fmt.Errorf("%s: %d", err, r.ID))
-			}
-
-			fmt.Printf("%s - %s: %d", d, err, r.ID)
-
-			if r.Message != "" {
-				fmt.Printf(": %s", r.Message)
-			}
-
-			fmt.Printf("\n")
-			continue
-		}
-
-		if err := db.Log(r, force); err != nil {
-			util.ExitError("failed to log revision", err)
-		}
-
-		fmt.Printf("%s - performed revision: %d", d, r.ID)
-
-		if r.Message != "" {
-			fmt.Printf(": %s", r.Message)
-		}
-
-		fmt.Printf("\n")
+	err = migration.Perform(db, revisions, d, force)
+	if err != nil {
+		util.ExitError("failed to perform revision ", err)
 	}
 }

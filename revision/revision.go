@@ -17,8 +17,8 @@ import (
 )
 
 var (
-	upFile      = "up.sql"
-	downFile    = "down.sql"
+	upFile   = "up.sql"
+	downFile = "down.sql"
 
 	reslug = regexp.MustCompile("[^a-zA-Z0-9]")
 	redup  = regexp.MustCompile("-{2,}")
@@ -194,6 +194,10 @@ func Find(id string) (*Revision, error) {
 			base = name
 			break
 		}
+	}
+
+	if base == "" {
+		return nil, errors.New("no revision found with ID: " + id)
 	}
 
 	return resolveFromPath(filepath.Join(config.RevisionsDir(), base))
