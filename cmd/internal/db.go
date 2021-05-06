@@ -5,6 +5,7 @@ import (
 	"errors"
 	"sync"
 
+	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/jackc/pgx/v4/stdlib"
 )
 
@@ -13,6 +14,14 @@ type openFunc func(string) (*sql.DB, error)
 var (
 	openMu    sync.RWMutex
 	openfuncs = make(map[string]openFunc)
+
+	mysqlInit = `CREATE TABLE mgrt_revisions (
+	id           VARCHAR NOT NULL UNIQUE,
+	author       VARCHAR NOT NULL,
+	comment      TEXT NOT NULL,
+	query        TEXT NOT NULL,
+	performed_at INT NOT NULL
+);`
 
 	postgresInit = `CREATE TABLE mgrt_revisions (
 	id           VARCHAR NOT NULL UNIQUE,
@@ -24,6 +33,7 @@ var (
 )
 
 func init() {
+	registerDB("mysql", openMySQL)
 	registerDB("postgresql", openPostgreSQL)
 }
 
@@ -51,6 +61,19 @@ func openDB(typ, dsn string) (*sql.DB, error) {
 		return nil, errors.New("unknown database type " + typ)
 	}
 	return open(dsn)
+}
+
+func openMySQL(dsn string) (*sql.DB, error) {
+	db, err := sql.Open("mysql", dsn)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if _, err := db.Exec(mysqlInit); err != nil {
+		return nil, err
+	}
+	return db, nil
 }
 
 func openPostgreSQL(dsn string) (*sql.DB, error) {
