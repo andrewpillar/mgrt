@@ -84,7 +84,7 @@ func Init(typ string, db *sql.DB) error {
 	init, ok := initfuncs[typ]
 
 	if !ok {
-		return errors.New("unknown database type" + typ)
+		return errors.New("unknown database type " + typ)
 	}
 	return init(db)
 }
