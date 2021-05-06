@@ -1,8 +1,13 @@
 package mgrt
 
 import (
+	"errors"
+	"io/ioutil"
+	"os"
 	"strings"
 	"testing"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 func Test_UnmarshalRevision(t *testing.T) {
@@ -69,5 +74,139 @@ This is the body of the comment.`
 		if title := rev.Title(); title != test.expected {
 			t.Errorf("tests[%d] - expected=%q, got=%q\n", i, test.expected, title)
 		}
+	}
+}
+
+func Test_RevisionPerformMultiple(t *testing.T) {
+	tmp, err := ioutil.TempFile("", "mgrt-db-*")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer os.Remove(tmp.Name())
+
+	db, err := Open("sqlite3", tmp.Name())
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer db.Close()
+
+	tests := []struct {
+		id      string
+		author  string
+		comment string
+		sql     string
+	}{
+		{
+			"20060102150407",
+			"Andrew",
+			"Add password to users table",
+			"ALTER TABLE users ADD COLUMN password VARCHAR NOT NULL;",
+		},
+		{
+			"20060102150405",
+			"Andrew",
+			"Add users table",
+			"CREATE TABLE users ( id INT NOT NULL UNIQUE );",
+		},
+		{
+			"20060102150406",
+			"Andrew",
+			"Add username to users table",
+			"ALTER TABLE users ADD COLUMN username VARCHAR NOT NULL;",
+		},
+	}
+
+	revs := make([]*Revision, 0, len(tests))
+
+	for _, test := range tests {
+		rev := NewRevision(test.author, test.comment)
+		rev.ID = test.id
+		rev.SQL = test.sql
+
+		revs = append(revs, rev)
+	}
+
+	if err := PerformRevisions(db, revs...); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func Test_RevisionPerform(t *testing.T) {
+	tmp, err := ioutil.TempFile("", "mgrt-db-*")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer os.Remove(tmp.Name())
+
+	db, err := Open("sqlite3", tmp.Name())
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer db.Close()
+
+	tests := []struct{
+		id      string
+		repeat  bool
+		author  string
+		comment string
+		sql     string
+	}{
+		{
+			"20060102150405",
+			true,
+			"Andrew",
+			"Add users table",
+			"CREATE TABLE users ( id INT NOT NULL UNIQUE );",
+		},
+		{
+			"20060102150406",
+			false,
+			"Andrew",
+			"Add username to users table",
+			"ALTER TABLE users ADD COLUMN username VARCHAR NOT NULL;",
+		},
+		{
+			"20060102150407",
+			false,
+			"Andrew",
+			"Add password to users table",
+			"ALTER TABLE users ADD COLUMN password VARCHAR NOT NULL;",
+		},
+	}
+
+	for i, test := range tests {
+		rev := NewRevision(test.author, test.comment)
+		rev.ID = test.id
+		rev.SQL = test.sql
+
+		if err := rev.Perform(db); err != nil {
+			t.Fatalf("tests[%d] - unexpected error %T %q\n", i, err, err)
+		}
+
+		if test.repeat {
+			if err := rev.Perform(db); err != nil {
+				if !errors.Is(err, ErrPerformed) {
+					t.Fatalf("tests[%d] - unexpected error, expected=%T, got=%t\n", i, ErrPerformed, errors.Unwrap(err))
+				}
+			}
+		}
+	}
+
+	revs, err := GetRevisions(db)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(revs) != len(tests) {
+		t.Fatalf("unexpected revision count, expected=%d, got=%d\n", len(tests), len(revs))
 	}
 }
