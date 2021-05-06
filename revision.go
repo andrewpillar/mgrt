@@ -65,6 +65,7 @@ var (
 func insertNode(n **node, val int64, r *Revision) {
 	if (*n) == nil {
 		(*n) = &node{
+			val: val,
 			rev: r,
 		}
 		return
