@@ -22,7 +22,7 @@ version="$(_version)"
 }
 
 default_tags="netgo osusergo"
-default_ldflags=$(printf -- "-X '%s/cmd/mgrt.Build=%s'" "$module" "$version")
+default_ldflags=$(printf -- "-X 'main.Build=%s'" "$version")
 
 tags="$TAGS $default_tags"
 ldflags="$LDFLAGS $default_ldflags"
