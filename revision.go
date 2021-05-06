@@ -3,8 +3,8 @@
 package mgrt
 
 import (
-	"bytes"
 	"bufio"
+	"bytes"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -31,10 +31,10 @@ type Errors []error
 // a database as a revision. Typically, this would be changes made to the
 // database schema itself.
 type Revision struct {
-	ID         string     // ID is the time when the Revision was added.
-	Author     string     // Author is who authored the original Revision.
-	Comment    string     // Comment provides a short description for the Revision.
-	SQL        string     // SQL is the code that will be executed when the Revision is performed.
+	ID          string    // ID is the time when the Revision was added.
+	Author      string    // Author is who authored the original Revision.
+	Comment     string    // Comment provides a short description for the Revision.
+	SQL         string    // SQL is the code that will be executed when the Revision is performed.
 	PerformedAt time.Time // PerformedAt is when the Revision was executed.
 }
 
@@ -297,7 +297,7 @@ func UnmarshalRevision(r io.Reader) (*Revision, error) {
 			}
 		}
 
-cont:
+	cont:
 		buf = append(buf, r)
 		r0 = r
 	}
@@ -393,7 +393,7 @@ func (r *Revision) Perform(db *sql.DB) error {
 
 	q := fmt.Sprintf(
 		"INSERT INTO mgrt_revisions (id, author, comment, sql, performed_at) VALUES (%q, %q, %q, %s, %d)",
-		r.ID, r.Author, r.Comment, "'" + r.SQL + "'", time.Now().Unix(),
+		r.ID, r.Author, r.Comment, "'"+r.SQL+"'", time.Now().Unix(),
 	)
 
 	if _, err := db.Exec(q); err != nil {

@@ -12,7 +12,7 @@ import (
 var SyncCmd = &Command{
 	Usage: "sync <-type type> <-dsn dsn>",
 	Short: "sync the performed revisions",
-	Long:  `Sync will update the local revisions with what has been performed in the
+	Long: `Sync will update the local revisions with what has been performed in the
 database. Doing this will overwrite any pre-existing revisions you may have
 locally. The database to connect to is specified via the -type and -dsn flags.
 

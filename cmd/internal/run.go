@@ -12,7 +12,7 @@ import (
 var RunCmd = &Command{
 	Usage: "run <revisions,...>",
 	Short: "run the given revisions",
-	Long:  `Run will perform the given revisions against the given database. The database
+	Long: `Run will perform the given revisions against the given database. The database
 to connect to is specified via the -type and -dsn flags.
 
 The -type flag specifies the type of database to connect to, it will be one of,
@@ -36,7 +36,7 @@ for the DSN string such as,
 sqlite3 however will accept a filepath, or the :memory: string, for example,
 
     -dsn :memory:`,
-	Run:   runCmd,
+	Run: runCmd,
 }
 
 func runCmd(cmd *Command, args []string) {
@@ -117,7 +117,6 @@ func runCmd(cmd *Command, args []string) {
 			os.Exit(1)
 		}
 	}
-
 
 	db, err := mgrt.Open(typ, dsn)
 

@@ -13,7 +13,7 @@ import (
 var LogCmd = &Command{
 	Usage: "log",
 	Short: "log the performed revisions",
-	Long:  `Log displays all of the revisions that have been performed in the given
+	Long: `Log displays all of the revisions that have been performed in the given
 database. The database to connect to is specified via the -type and -dsn flags.
 
 The -type flag specifies the type of database to connect to, it will be one of,

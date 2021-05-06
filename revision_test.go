@@ -50,7 +50,7 @@ func Test_RevisionTitle(t *testing.T) {
 This is the body of the comment.`
 	shortComment := "A simple comment that is shorter thant 72 characters in length"
 
-	tests := []struct{
+	tests := []struct {
 		comment  string
 		expected string
 	}{
@@ -152,7 +152,7 @@ func Test_RevisionPerform(t *testing.T) {
 
 	defer db.Close()
 
-	tests := []struct{
+	tests := []struct {
 		id      string
 		repeat  bool
 		author  string
