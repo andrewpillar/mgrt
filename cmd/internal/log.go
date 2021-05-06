@@ -53,6 +53,16 @@ func logCmd(cmd *Command, args []string) {
 	fs.StringVar(&dsn, "dsn", "", "the dsn for the database to run the revisions against")
 	fs.Parse(args[1:])
 
+	if typ == "" {
+		fmt.Fprintf(os.Stderr, "%s %s: missing -type flag\n", cmd.Argv0, argv0)
+		os.Exit(1)
+	}
+
+	if dsn == "" {
+		fmt.Fprintf(os.Stderr, "%s %s: missing -dsn flag\n", cmd.Argv0, argv0)
+		os.Exit(1)
+	}
+
 	db, err := mgrt.Open(typ, dsn)
 
 	if err != nil {
@@ -73,6 +83,7 @@ func logCmd(cmd *Command, args []string) {
 		fmt.Println("revision", rev.ID)
 		fmt.Println("Author:    ", rev.Author)
 		fmt.Println("Performed: ", rev.PerformedAt.Format(time.ANSIC))
+		fmt.Println(rev.Comment)
 		fmt.Println()
 
 		lines := strings.Split(rev.SQL, "\n")
