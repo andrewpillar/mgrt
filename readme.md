@@ -188,11 +188,20 @@ it just import the repository into your code,
 from here you will be able to start creating revisions and performing them
 against any pre-existing database connection you may have,
 
+    // mgrt.Open will wrap sql.Open from the stdlib, and initialize the database
+    // for performing revisions.
+    db, err := mgrt.Open("sqlite3", "acme.db")
+
+    if err != nil {
+        panic(err) // maybe acceptable here
+    }
+
     rev := mgrt.NewRevision("Andrew", "This is being done from Go.")
 
-    // Assume db comes from some place else in the code.
     if err := rev.Perform(db); err != nil {
-        panic(err) // not best practice
+        if !errors.Is(err, mgrt.ErrPerformed) {
+            panic(err) // not best practice
+        }
     }
 
 all pre-existing revisions can be retrieved via GetRevisions,
