@@ -72,6 +72,7 @@ connect to,
     revision 20060102150405
     Author:    Andrew Pillar <me@andrewpillar.com>
     Performed: Mon Jan  6 15:04:05 2006
+    My first revision
     
         CREATE TABLE users (
             id INT NOT NULL UNIQUE
@@ -147,6 +148,7 @@ The revisions performed against a database can be viewed with `mgrt log`,
     revision 20060102150405
     Author:    Andrew Pillar <me@andrewpillar.com>
     Performed: Mon Jan  6 15:04:05 2006
+    My first revision
     
         CREATE TABLE users (
             id INT NOT NULL UNIQUE
