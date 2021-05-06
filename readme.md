@@ -211,3 +211,6 @@ all pre-existing revisions can be retrieved via GetRevisions,
     if err != nil {
         panic(err) // don't actually do this
     }
+
+more information about using mgrt as a library can be found in the
+[Go doc](https://pkg.go.dev/github.com/andrewpillar/mgrt) itself for mgrt.
