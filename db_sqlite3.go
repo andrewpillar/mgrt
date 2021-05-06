@@ -1,6 +1,6 @@
 // +build sqlite3
 
-package internal
+package mgrt
 
 import (
 	"database/sql"
@@ -18,20 +18,14 @@ var sqlite3Init = `CREATE TABLE mgrt_revisions (
 );`
 
 func init() {
-	registerDB("sqlite3", openSqlite3)
+	Register("sqlite3", doSqlite3Init)
 }
 
-func openSqlite3(dsn string) (*sql.DB, error) {
-	db, err := sql.Open("sqlite3", dsn)
-
-	if err != nil {
-		return nil, err
-	}
-
+func doSqlite3Init(db *sql.DB) error {
 	if _, err := db.Exec(sqlite3Init); err != nil {
 		if !strings.Contains(err.Error(), "already exists") {
-			return nil, err
+			return err
 		}
 	}
-	return db, nil
+	return nil
 }

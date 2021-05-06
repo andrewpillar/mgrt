@@ -53,7 +53,7 @@ func syncCmd(cmd *Command, args []string) {
 	fs.StringVar(&dsn, "dsn", "", "the dsn for the database to run the revisions against")
 	fs.Parse(args[1:])
 
-	db, err := openDB(typ, dsn)
+	db, err := mgrt.Open(typ, dsn)
 
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s %s: %s\n", cmd.Argv0, argv0, err)

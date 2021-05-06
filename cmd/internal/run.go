@@ -118,7 +118,8 @@ func runCmd(cmd *Command, args []string) {
 		}
 	}
 
-	db, err := openDB(typ, dsn)
+
+	db, err := mgrt.Open(typ, dsn)
 
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s %s: %s\n", cmd.Argv0, argv0, err)
