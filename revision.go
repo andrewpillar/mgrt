@@ -14,6 +14,9 @@ import (
 	"time"
 )
 
+// node is a node in the binary tree of a Collection. This stores the val used
+// for sorting revisions in a Collection. The val will be the Unix time of the
+// Revision ID, since Revision IDs are a time in the layout of 20060102150405.
 type node struct {
 	val   int64
 	rev   *Revision
