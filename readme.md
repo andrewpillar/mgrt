@@ -148,10 +148,22 @@ The revisions performed against a database can be viewed with `mgrt log`,
     revision 20060102150405
     Author:    Andrew Pillar <me@andrewpillar.com>
     Performed: Mon Jan  6 15:04:05 2006
-    My first revision
-    
+
+        My first revision
+
+individual revisions can also be seen with `mgrt show`. You can pass a revision
+ID to `mgrt show` to view an individual revision. If no revision ID is given,
+then the latest revision is shown.
+
+    $ mgrt show -type sqlite3 -dsn acme.db 20060102150405
+    revision 20060102150405
+    Author:    Andrew Pillar <me@andrewpillar.com>
+    Performed: Mon Jan  6 15:04:05 2006
+
+        My first revision
+
         CREATE TABLE users (
-            id INT NOT NULL UNIQUE
+                id INT NOT NULL UNIQUE
         );
 
 ## Viewing revisions

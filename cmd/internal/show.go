@@ -10,13 +10,12 @@ import (
 	"github.com/andrewpillar/mgrt"
 )
 
-var LogCmd = &Command{
-	Usage: "log",
-	Short: "log the performed revisions",
-	Long: `Log displays all of the revisions that have been performed in the given
-database. The -n flag can be given to limit the number of revisions that are
-shown in the log. The database to connect to is specified via the -type and
--dsn flags.
+var ShowCmd = &Command{
+	Usage: "show [revision]",
+	Short: "show the given revision",
+	Long:  `Show will show the SQL that was run in the given revision. If no revision is
+specified, then the latest revision will be shown, if any. The database to connect to is
+specified via the -type and -dsn flags.
 
 The -type flag specifies the type of database to connect to, it will be one of,
 
@@ -39,22 +38,20 @@ for the DSN string such as,
 sqlite3 however will accept a filepath, or the :memory: string, for example,
 
     -dsn :memory:`,
-	Run: logCmd,
+	Run: showCmd,
 }
 
-func logCmd(cmd *Command, args []string) {
+func showCmd(cmd *Command, args []string) {
 	argv0 := args[0]
 
 	var (
 		typ string
 		dsn string
-		n   int
 	)
 
 	fs := flag.NewFlagSet(cmd.Argv0+" "+argv0, flag.ExitOnError)
 	fs.StringVar(&typ, "type", "", "the database type one of postgresql, sqlite3")
 	fs.StringVar(&dsn, "dsn", "", "the dsn for the database to run the revisions against")
-	fs.IntVar(&n, "n", 0, "the number of entries to show")
 	fs.Parse(args[1:])
 
 	if typ == "" {
@@ -76,24 +73,45 @@ func logCmd(cmd *Command, args []string) {
 
 	defer db.Close()
 
-	revs, err := mgrt.GetRevisions(db, n)
+	args = fs.Args()
 
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s %s: failed to get revisions: %s\n", cmd.Argv0, argv0, err)
-		os.Exit(1)
-	}
+	var rev *mgrt.Revision
 
-	for _, rev := range revs {
-		fmt.Println("revision", rev.ID)
-		fmt.Println("Author:    ", rev.Author)
-		fmt.Println("Performed: ", rev.PerformedAt.Format(time.ANSIC))
-		fmt.Println()
+	if len(args) >= 1 {
+		rev, err = mgrt.GetRevision(db, args[0])
 
-		lines := strings.Split(rev.Comment, "\n")
-
-		for _, line := range lines {
-			fmt.Println("   ", line)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%s %s: failed to show revision: %s\n", cmd.Argv0, argv0, err)
+			os.Exit(1)
 		}
-		fmt.Println()
 	}
+
+	if rev == nil {
+		revs, err := mgrt.GetRevisions(db, 1)
+
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%s %s: failed to show revision: %s\n", cmd.Argv0, argv0, err)
+			os.Exit(1)
+		}
+		rev = revs[0]
+	}
+
+	fmt.Println("revision", rev.ID)
+	fmt.Println("Author:    ", rev.Author)
+	fmt.Println("Performed: ", rev.PerformedAt.Format(time.ANSIC))
+	fmt.Println()
+
+	lines := strings.Split(rev.Comment, "\n")
+
+	for _, line := range lines {
+		fmt.Println("   ", line)
+	}
+	fmt.Println()
+
+	lines = strings.Split(rev.SQL, "\n")
+
+	for _, line := range lines {
+		fmt.Println("   ", line)
+	}
+	fmt.Println()
 }

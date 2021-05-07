@@ -5,6 +5,7 @@ package mgrt
 import (
 	"bufio"
 	"bytes"
+	"database/sql"
 	"errors"
 	"io"
 	"os"
@@ -61,6 +62,8 @@ var (
 	// ErrPerformed is returned whenever a Revision has already been performed.
 	// This can be treated as a benign error.
 	ErrPerformed = errors.New("revision performed")
+
+	ErrNotFound = errors.New("revision not found")
 )
 
 func insertNode(n **node, val int64, r *Revision) {
@@ -113,6 +116,31 @@ func RevisionPerformed(db *DB, rev *Revision) error {
 		}
 	}
 	return nil
+}
+
+// GetRevision get's the Revision with the given ID.
+func GetRevision(db *DB, id string) (*Revision, error) {
+	var (
+		rev Revision
+		sec int64
+	)
+
+	q := "SELECT id, author, comment, sql, performed_at FROM mgrt_revisions WHERE (id = ?)"
+
+	row := db.QueryRow(db.Parameterize(q), id)
+
+	if err := row.Scan(&rev.ID, &rev.Author, &rev.Comment, &rev.SQL, &sec); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, &RevisionError{
+				ID:  id,
+				Err: ErrNotFound,
+			}
+		}
+		return nil, err
+	}
+
+	rev.PerformedAt = time.Unix(sec, 0)
+	return &rev, nil
 }
 
 // GetRevisions returns a list of all the revisions that have been performed

@@ -26,6 +26,7 @@ Usage:
 	cmds.Add("log", internal.LogCmd)
 	cmds.Add("ls", internal.LsCmd)
 	cmds.Add("run", internal.RunCmd)
+	cmds.Add("show", internal.ShowCmd)
 	cmds.Add("sync", internal.SyncCmd)
 	cmds.Add("help", internal.HelpCmd(cmds))
 
