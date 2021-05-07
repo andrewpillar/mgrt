@@ -93,13 +93,22 @@ func Init(typ string, db *sql.DB) error {
 // dsn. The database connection returned from this will then be passed to Init
 // for initializing the database.
 func Open(typ, dsn string) (*sql.DB, error) {
+	initMu.RLock()
+	defer initMu.RUnlock()
+
+	init, ok := initfuncs[typ]
+
+	if !ok {
+		return nil, errors.New("unknown database type " + typ)
+	}
+
 	db, err := sql.Open(typ, dsn)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if err := Init(typ, db); err != nil {
+	if err := init(db); err != nil {
 		return nil, err
 	}
 	return db, nil
