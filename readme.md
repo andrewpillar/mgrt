@@ -151,21 +151,6 @@ The revisions performed against a database can be viewed with `mgrt log`,
 
         My first revision
 
-individual revisions can also be seen with `mgrt show`. You can pass a revision
-ID to `mgrt show` to view an individual revision. If no revision ID is given,
-then the latest revision is shown.
-
-    $ mgrt show -type sqlite3 -dsn acme.db 20060102150405
-    revision 20060102150405
-    Author:    Andrew Pillar <me@andrewpillar.com>
-    Performed: Mon Jan  6 15:04:05 2006
-
-        My first revision
-
-        CREATE TABLE users (
-                id INT NOT NULL UNIQUE
-        );
-
 ## Viewing revisions
 
 Local revisions can be viewed with `mgrt cat`. This simply takes a list of
@@ -190,6 +175,21 @@ of the revision,
     CREATE TABLE users (
             id INT NOT NULL UNIQUE
     );
+
+performed revisions can also be seen with `mgrt show`. You can pass a revision
+ID to `mgrt show` to view an individual revision. If no revision ID is given,
+then the latest revision is shown.
+
+    $ mgrt show -type sqlite3 -dsn acme.db 20060102150405
+    revision 20060102150405
+    Author:    Andrew Pillar <me@andrewpillar.com>
+    Performed: Mon Jan  6 15:04:05 2006
+
+        My first revision
+
+        CREATE TABLE users (
+                id INT NOT NULL UNIQUE
+        );
 
 ## Library usage
 
