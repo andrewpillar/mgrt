@@ -200,7 +200,7 @@ func Test_RevisionPerform(t *testing.T) {
 		}
 	}
 
-	revs, err := GetRevisions(db)
+	revs, err := GetRevisions(db, -1)
 
 	if err != nil {
 		t.Fatal(err)
