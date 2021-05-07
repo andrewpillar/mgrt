@@ -1,0 +1,37 @@
+driver:
+  type: qemu
+  image: debian/stable
+env:
+- LDFLAGS=-s -w
+sources:
+- https://github.com/andrewpillar/mgrt
+stages:
+- deps
+- test
+- make
+- make-sqlite3
+jobs:
+- stage: deps
+  commands:
+  - apt install -y curl
+  - curl -sL https://golang.org/dl/go1.16.4.linux-amd64.tar.gz -o go.tar.gz
+  - tar -xf go.tar.gz
+  - mv go /usr/lib
+  - ln -sf /usr/lib/go/bin/go /usr/bin/go
+  - ln -sf /usr/lib/go/bin/gofmt /usr/bin/gofmt
+- stage: test
+  commands:
+  - cd mgrt
+  - go test -cover -tags sqlite3
+- stage: make
+  commands:
+  - cd mgrt
+  - ./make.sh
+  artifacts:
+  - mgrt/bin/mgrt
+- stage: make-sqlite3
+  commands:
+  - cd mgrt
+  - TAGS="sqlite3" ./make.sh
+  artifacts:
+  - mgrt/bin/mgrt => mgrt-sqlite3
