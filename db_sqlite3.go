@@ -18,10 +18,14 @@ var sqlite3Init = `CREATE TABLE mgrt_revisions (
 );`
 
 func init() {
-	Register("sqlite3", doSqlite3Init)
+	Register("sqlite3", &DB{
+		Type:         "sqlite3",
+		Init:         initSqlite3,
+		Parameterize: func(s string) string { return s },
+	})
 }
 
-func doSqlite3Init(db *sql.DB) error {
+func initSqlite3(db *sql.DB) error {
 	if _, err := db.Exec(sqlite3Init); err != nil {
 		if !strings.Contains(err.Error(), "already exists") {
 			return err

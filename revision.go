@@ -5,9 +5,7 @@ package mgrt
 import (
 	"bufio"
 	"bytes"
-	"database/sql"
 	"errors"
-	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -92,16 +90,16 @@ func NewRevision(author, comment string) *Revision {
 
 // RevisionPerformed checks to see if the given Revision has been performed
 // against the given database.
-func RevisionPerformed(db *sql.DB, rev *Revision) error {
+func RevisionPerformed(db *DB, rev *Revision) error {
 	var count int64
 
 	if _, err := time.Parse(revisionIdFormat, rev.ID); err != nil {
 		return ErrInvalid
 	}
 
-	q := "SELECT COUNT(id) FROM mgrt_revisions WHERE id = " + rev.ID
+	q := db.Parameterize("SELECT COUNT(id) FROM mgrt_revisions WHERE (id = ?)")
 
-	if err := db.QueryRow(q).Scan(&count); err != nil {
+	if err := db.QueryRow(q, rev.ID).Scan(&count); err != nil {
 		return &RevisionError{
 			ID:  rev.ID,
 			Err: err,
@@ -120,7 +118,7 @@ func RevisionPerformed(db *sql.DB, rev *Revision) error {
 // GetRevisions returns a list of all the Revisions that have been performed
 // against the given database. The returned revisions will be ordered by their
 // performance date descending.
-func GetRevisions(db *sql.DB) ([]*Revision, error) {
+func GetRevisions(db *DB) ([]*Revision, error) {
 	var count int64
 
 	q0 := "SELECT COUNT(id) FROM mgrt_revisions"
@@ -168,7 +166,7 @@ func GetRevisions(db *sql.DB) ([]*Revision, error) {
 // are performed. If any of the given revisions have already been performed then
 // the Errors type will be returned containing *RevisionError for each revision
 // that was already performed.
-func PerformRevisions(db *sql.DB, revs0 ...*Revision) error {
+func PerformRevisions(db *DB, revs0 ...*Revision) error {
 	var c Collection
 
 	for _, rev := range revs0 {
@@ -378,7 +376,7 @@ func (e *RevisionError) Unwrap() error { return e.Err }
 // Perform will perform the current Revision against the given database. If
 // the Revision is emtpy, then nothing happens. If the Revision has already
 // been performed, then ErrPerformed is returned.
-func (r *Revision) Perform(db *sql.DB) error {
+func (r *Revision) Perform(db *DB) error {
 	if r.SQL == "" {
 		return nil
 	}
@@ -391,12 +389,9 @@ func (r *Revision) Perform(db *sql.DB) error {
 		return err
 	}
 
-	q := fmt.Sprintf(
-		"INSERT INTO mgrt_revisions (id, author, comment, sql, performed_at) VALUES (%q, %q, %q, %s, %d)",
-		r.ID, r.Author, r.Comment, "'"+r.SQL+"'", time.Now().Unix(),
-	)
+	q := db.Parameterize("INSERT INTO mgrt_revisions (id, author, comment, sql, performed_at) VALUES (?, ?, ?, ?, ?)")
 
-	if _, err := db.Exec(q); err != nil {
+	if _, err := db.Exec(q, r.ID, r.Author, r.Comment, r.SQL, time.Now().Unix()); err != nil {
 		return err
 	}
 	return nil
