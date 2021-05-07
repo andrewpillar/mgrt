@@ -115,23 +115,26 @@ func RevisionPerformed(db *DB, rev *Revision) error {
 	return nil
 }
 
-// GetRevisions returns a list of all the Revisions that have been performed
-// against the given database. The returned revisions will be ordered by their
-// performance date descending.
-func GetRevisions(db *DB) ([]*Revision, error) {
-	var count int64
+// GetRevisions returns a list of all the revisions that have been performed
+// against the given database. If n is <= 0 then all of the revisions will be
+// retrieved, otherwise, only the given amount will be retrieved. The returned
+// revisions will be ordered by their performance date descending.
+func GetRevisions(db *DB, n int) ([]*Revision, error) {
+	count := int64(n)
 
-	q0 := "SELECT COUNT(id) FROM mgrt_revisions"
+	if n <= 0 {
+		q0 := "SELECT COUNT(id) FROM mgrt_revisions"
 
-	if err := db.QueryRow(q0).Scan(&count); err != nil {
-		return nil, err
+		if err := db.QueryRow(q0).Scan(&count); err != nil {
+			return nil, err
+		}
 	}
 
 	revs := make([]*Revision, 0, int(count))
 
-	q := "SELECT id, author, comment, sql, performed_at FROM mgrt_revisions ORDER BY performed_at, id DESC"
+	q := "SELECT id, author, comment, sql, performed_at FROM mgrt_revisions ORDER BY performed_at, id DESC LIMIT ?"
 
-	rows, err := db.Query(q)
+	rows, err := db.Query(db.Parameterize(q), count)
 
 	if err != nil {
 		return nil, err

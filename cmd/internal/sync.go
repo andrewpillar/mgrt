@@ -77,7 +77,7 @@ func syncCmd(cmd *Command, args []string) {
 		os.Exit(1)
 	}
 
-	revs, err := mgrt.GetRevisions(db)
+	revs, err := mgrt.GetRevisions(db, -1)
 
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s %s: failed to get revisions: %s\n", cmd.Argv0, argv0, err)

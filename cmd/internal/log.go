@@ -14,7 +14,9 @@ var LogCmd = &Command{
 	Usage: "log",
 	Short: "log the performed revisions",
 	Long: `Log displays all of the revisions that have been performed in the given
-database. The database to connect to is specified via the -type and -dsn flags.
+database. The -n flag can be given to limit the number of revisions that are
+shown in the log. The database to connect to is specified via the -type and
+-dsn flags.
 
 The -type flag specifies the type of database to connect to, it will be one of,
 
@@ -46,11 +48,13 @@ func logCmd(cmd *Command, args []string) {
 	var (
 		typ string
 		dsn string
+		n   int
 	)
 
 	fs := flag.NewFlagSet(cmd.Argv0+" "+argv0, flag.ExitOnError)
 	fs.StringVar(&typ, "type", "", "the database type one of postgresql, sqlite3")
 	fs.StringVar(&dsn, "dsn", "", "the dsn for the database to run the revisions against")
+	fs.IntVar(&n, "n", 0, "the number of entries to show")
 	fs.Parse(args[1:])
 
 	if typ == "" {
@@ -72,7 +76,7 @@ func logCmd(cmd *Command, args []string) {
 
 	defer db.Close()
 
-	revs, err := mgrt.GetRevisions(db)
+	revs, err := mgrt.GetRevisions(db, n)
 
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s %s: failed to get revisions: %s\n", cmd.Argv0, argv0, err)
