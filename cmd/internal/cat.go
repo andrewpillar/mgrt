@@ -31,7 +31,7 @@ func catCmd(cmd *Command, args []string) {
 		os.Exit(1)
 	}
 
-	info, err := os.Stat(migrationsDir)
+	info, err := os.Stat(revisionsDir)
 
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -43,7 +43,7 @@ func catCmd(cmd *Command, args []string) {
 	}
 
 	if !info.IsDir() {
-		fmt.Fprintf(os.Stderr, "%s %s: %s is not a directory\n", cmd.Argv0, argv0, migrationsDir)
+		fmt.Fprintf(os.Stderr, "%s %s: %s is not a directory\n", cmd.Argv0, argv0, revisionsDir)
 		os.Exit(1)
 	}
 

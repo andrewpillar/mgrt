@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	migrationsDir = "migrations"
+	revisionsDir = "revisions"
 
 	AddCmd = &Command{
 		Usage: "add [comment]",
@@ -22,7 +22,7 @@ var (
 )
 
 func revisionPath(id string) string {
-	return filepath.Join(migrationsDir, id+".sql")
+	return filepath.Join(revisionsDir, id+".sql")
 }
 
 func openInEditor(path string) error {
@@ -46,8 +46,8 @@ func addCmd(cmd *Command, args []string) {
 		comment = args[1]
 	}
 
-	if err := os.MkdirAll(migrationsDir, os.FileMode(0755)); err != nil {
-		fmt.Fprintf(os.Stderr, "%s %s: failed to create %s directory: %s", cmd.Argv0, args[0], migrationsDir, err)
+	if err := os.MkdirAll(revisionsDir, os.FileMode(0755)); err != nil {
+		fmt.Fprintf(os.Stderr, "%s %s: failed to create %s directory: %s", cmd.Argv0, args[0], revisionsDir, err)
 		os.Exit(1)
 	}
 
@@ -59,7 +59,7 @@ func addCmd(cmd *Command, args []string) {
 	}
 
 	rev := mgrt.NewRevision(author, comment)
-	path := filepath.Join(migrationsDir, rev.ID+".sql")
+	path := filepath.Join(revisionsDir, rev.ID+".sql")
 
 	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE, os.FileMode(0644))
 

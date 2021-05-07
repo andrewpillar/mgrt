@@ -40,7 +40,7 @@ sqlite3 however will accept a filepath, or the :memory: string, for example,
 }
 
 func runCmd(cmd *Command, args []string) {
-	info, err := os.Stat(migrationsDir)
+	info, err := os.Stat(revisionsDir)
 
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -52,7 +52,7 @@ func runCmd(cmd *Command, args []string) {
 	}
 
 	if !info.IsDir() {
-		fmt.Fprintf(os.Stderr, "%s %s: %s is not a directory\n", cmd.Argv0, args[0], migrationsDir)
+		fmt.Fprintf(os.Stderr, "%s %s: %s is not a directory\n", cmd.Argv0, args[0], revisionsDir)
 		os.Exit(1)
 	}
 
@@ -93,7 +93,7 @@ func runCmd(cmd *Command, args []string) {
 	}
 
 	if len(revs) == 0 {
-		err := filepath.Walk(migrationsDir, func(path string, info os.FileInfo, err error) error {
+		err := filepath.Walk(revisionsDir, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
 			}

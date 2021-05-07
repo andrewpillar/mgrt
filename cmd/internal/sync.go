@@ -72,7 +72,7 @@ func syncCmd(cmd *Command, args []string) {
 
 	defer db.Close()
 
-	if err := os.MkdirAll(migrationsDir, os.FileMode(0755)); err != nil {
+	if err := os.MkdirAll(revisionsDir, os.FileMode(0755)); err != nil {
 		fmt.Fprintf(os.Stderr, "%s %s: %s\n", cmd.Argv0, argv0, err)
 		os.Exit(1)
 	}
@@ -86,7 +86,7 @@ func syncCmd(cmd *Command, args []string) {
 
 	for _, rev := range revs {
 		func() {
-			f, err := os.OpenFile(filepath.Join(migrationsDir, rev.ID+".sql"), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, os.FileMode(0644))
+			f, err := os.OpenFile(filepath.Join(revisionsDir, rev.ID+".sql"), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, os.FileMode(0644))
 
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "%s %s: failed to sync revisions: %s\n", cmd.Argv0, argv0, err)

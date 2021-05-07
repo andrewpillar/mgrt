@@ -30,7 +30,7 @@ initialize. To begin writing revisions simply invoke `mgrt add`,
 
     $ mgrt add "My first revision"
 
-this will create a new revision file in the `migrations` directory, and open
+this will create a new revision file in the `revisions` directory, and open
 it up for editting with the revision to write,
 
     /*
@@ -84,15 +84,15 @@ code that was executed as part of that revision.
 mgrt also offers the ability to sync the revisions that have been performed on
 a database against what you have locally. This is achieved with `mgrt sync`, and
 just like before, this also takes the `-type` and `-dsn` flags. Lets delete the
-`migrations` directory that was created for us and do a `mgrt sync`.
+`revisions` directory that was created for us and do a `mgrt sync`.
 
-    $ rm -rf migrations
+    $ rm -rf revisions
     $ mgrt ls
     $ mgrt sync -type sqlite3 -dsn acme.db
     $ mgrt ls
     20060102150405: Andrew Pillar <me@andrewpillar.com> - My first revision
 
-with `mgrt sync` you can easily view the migrations that have been run against
+with `mgrt sync` you can easily view the revisions that have been run against
 different databases.
 
 ## Database connection
@@ -130,7 +130,7 @@ revision can only be performed once, and cannot be undone. If you wish to undo
 a revision, then it is recommended to write another revision that does the
 inverse of the prior.
 
-Revisions are stored in the `migrations` directory from where the `mgrt add`
+Revisions are stored in the `revisions` directory from where the `mgrt add`
 command was run. Each revision file is prefixed with a comment block header
 that contains metadata about the revision itself, such as the ID, the author and
 a short comment about the revision.
