@@ -133,6 +133,16 @@ func Test_RevisionPerformMultiple(t *testing.T) {
 	if err := PerformRevisions(db, revs...); err != nil {
 		t.Fatal(err)
 	}
+
+	_, err = GetRevision(db, "foo")
+
+	if !errors.Is(err, ErrNotFound) {
+		t.Fatalf("unexpected error, expected=%T, got=%T\n", ErrNotFound, err)
+	}
+
+	if _, err = GetRevision(db, "20060102150406"); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func Test_RevisionPerform(t *testing.T) {
