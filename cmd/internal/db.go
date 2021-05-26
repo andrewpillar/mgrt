@@ -146,7 +146,7 @@ func dbLsCmd(cmd *Command, args []string) {
 			return err
 		}
 
-		fmt.Println(it.Name, it.Type, it.DSN)
+		fmt.Println(it.Name)
 		return nil
 	})
 
