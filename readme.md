@@ -97,20 +97,24 @@ different databases.
 
 ## Database connection
 
-Database connection for mgrt is controlled via the `-type` and `-dsn` flags.
-This allows for easy use of mgrt with multiple databases of different types.
+Database connections for mgrt can be managed via the `mgrt db` command. This
+allows you to set aliases for the different databases you can connect to,
+for example,
 
-The `-type` flag specifies the type of database to connect to, it will be one
-of,
+    $ mgrt db set local-db postgresql "host=localhost port=5432 dbname=dev user=admin password=secret"
+
+this can then be used via the `-db` flag for the commands that require a
+database connection.
+
+The `mgrt db set` command expects the type of the database, and the DSN for
+connecting to the database. The type will be one of,
 
 * mysql
 * postgresql
 * sqlite3
 
-The `-dsn` flag specifies the data source name for the database. This will vary
-depending on the type of database you're connecting to.
-
-mysql and postgresql both allow for the URI connection string, such as,
+the DSN will vary depending on the type of database being used. The mysql and
+postgresql you can use the URI connection string, such as,
 
     type://[user[:password]@][host]:[port][,...][/dbname][?param1=value1&...]
 
@@ -119,9 +123,10 @@ for the DSN string such as,
 
     host=localhost port=5432 dbname=mydb connect_timeout=10
 
-sqlite3 however will accept a filepath, or the `:memory:` string, for example,
+sqlite3 however will accept a filepath.
 
-    -dsn :memory:
+You can also specify the `-type` and `-dsn` flags too. These take the same
+arguments as above. The `-db` flag however is more convenient to use.
 
 ## Revisions
 
@@ -144,7 +149,7 @@ time of execution.
 
 The revisions performed against a database can be viewed with `mgrt log`,
 
-    $ mgrt log -type sqlite3 -dsn acme.db
+    $ mgrt log -db local-dev
     revision 20060102150405
     Author:    Andrew Pillar <me@andrewpillar.com>
     Performed: Mon Jan  6 15:04:05 2006
@@ -180,7 +185,7 @@ performed revisions can also be seen with `mgrt show`. You can pass a revision
 ID to `mgrt show` to view an individual revision. If no revision ID is given,
 then the latest revision is shown.
 
-    $ mgrt show -type sqlite3 -dsn acme.db 20060102150405
+    $ mgrt show -db local-dev 20060102150405
     revision 20060102150405
     Author:    Andrew Pillar <me@andrewpillar.com>
     Performed: Mon Jan  6 15:04:05 2006
