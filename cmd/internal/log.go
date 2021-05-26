@@ -16,7 +16,8 @@ var LogCmd = &Command{
 	Long: `Log displays all of the revisions that have been performed in the given
 database. The -n flag can be given to limit the number of revisions that are
 shown in the log. The database to connect to is specified via the -type and
--dsn flags.
+-dsn flags, or via the -db flag if a database connection has been configured
+via the "mgrt db" command.
 
 The -type flag specifies the type of database to connect to, it will be one of,
 
@@ -46,16 +47,34 @@ func logCmd(cmd *Command, args []string) {
 	argv0 := args[0]
 
 	var (
-		typ string
-		dsn string
-		n   int
+		typ    string
+		dsn    string
+		dbname string
+		n      int
 	)
 
 	fs := flag.NewFlagSet(cmd.Argv0+" "+argv0, flag.ExitOnError)
 	fs.StringVar(&typ, "type", "", "the database type one of postgresql, sqlite3")
 	fs.StringVar(&dsn, "dsn", "", "the dsn for the database to run the revisions against")
+	fs.StringVar(&dbname, "db", "", "the database to connect to")
 	fs.IntVar(&n, "n", 0, "the number of entries to show")
 	fs.Parse(args[1:])
+
+	if dbname != "" {
+		it, err := getdbitem(dbname)
+
+		if err != nil {
+			if os.IsNotExist(err) {
+				fmt.Fprintf(os.Stderr, "%s %s: database %s does not exist\n", cmd.Argv0, argv0, dbname)
+				os.Exit(1)
+			}
+			fmt.Fprintf(os.Stderr, "%s %s: %s\n", cmd.Argv0, argv0, err)
+			os.Exit(1)
+		}
+
+		typ = it.Type
+		dsn = it.DSN
+	}
 
 	if typ == "" {
 		fmt.Fprintf(os.Stderr, "%s %s: missing -type flag\n", cmd.Argv0, argv0)

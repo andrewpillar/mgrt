@@ -23,6 +23,7 @@ Usage:
 
 	cmds.Add("add", internal.AddCmd)
 	cmds.Add("cat", internal.CatCmd)
+	cmds.Add("db", internal.DBCmd(cmds.Argv0))
 	cmds.Add("log", internal.LogCmd)
 	cmds.Add("ls", internal.LsCmd)
 	cmds.Add("run", internal.RunCmd)
