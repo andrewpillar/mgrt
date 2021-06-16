@@ -177,7 +177,25 @@ func dbSetCmd(cmd *Command, args []string) {
 		DSN:  args[3],
 	}
 
-	f, err := os.OpenFile(filepath.Join(dir, it.Name), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, os.FileMode(0400))
+	fname := filepath.Join(dir, it.Name)
+
+	_, err = os.Stat(fname)
+
+	if err != nil {
+		if !os.IsNotExist(err) {
+			fmt.Fprintf(os.Stderr, "%s: %s\n", cmd.Argv0, argv0, err)
+			os.Exit(1)
+		}
+	}
+
+	if err == nil {
+		if err := os.RemoveAll(fname); err != nil {
+			fmt.Fprintf(os.Stderr, "%s: %s\n", cmd.Argv0, argv0, err)
+			os.Exit(1)
+		}
+	}
+
+	f, err := os.OpenFile(fname, os.O_CREATE|os.O_WRONLY, os.FileMode(0400))
 
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s %s: %s\n", cmd.Argv0, argv0, err)
