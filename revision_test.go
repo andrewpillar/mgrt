@@ -15,6 +15,8 @@ func Test_UnmarshalRevision(t *testing.T) {
 Revision: 20060102150405
 Author:   Author <me@example.com>
 
+Title
+
 Comment line 1
 Comment line 2
 */
@@ -34,8 +36,12 @@ DROP TABLE users;`)
 		t.Errorf("unexpected revision author, expected=%q, got=%q\n", "Author <me@example.com>", rev.Author)
 	}
 
-	if rev.Comment != "Comment line 1\nComment line 2" {
-		t.Errorf("unexpected revision comment, expected=%q, got=%q\n", "Comment line 1\nComment line 2", rev.Comment)
+	if rev.Comment != "Title\n\nComment line 1\nComment line 2" {
+		t.Errorf("unexpected revision comment, expected=%q, got=%q\n", "Title\n\nComment line 1\nComment line 2", rev.Comment)
+	}
+
+	if title := rev.Title(); title != "Title" {
+		t.Errorf("unexpected revision comment title, expected=%q, got=%q\n", "Title", title)
 	}
 
 	if rev.SQL != "DROP TABLE users;" {

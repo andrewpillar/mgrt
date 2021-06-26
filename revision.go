@@ -160,7 +160,7 @@ func GetRevisions(db *DB, n int) ([]*Revision, error) {
 
 	revs := make([]*Revision, 0, int(count))
 
-	q := "SELECT id, author, comment, sql, performed_at FROM mgrt_revisions ORDER BY performed_at, id DESC LIMIT ?"
+	q := "SELECT id, author, comment, sql, performed_at FROM mgrt_revisions ORDER BY id DESC LIMIT ?"
 
 	rows, err := db.Query(db.Parameterize(q), count)
 
@@ -278,8 +278,10 @@ func UnmarshalRevision(r io.Reader) (*Revision, error) {
 		if inBlock {
 			if r == '\n' {
 				if r0 == '\n' {
-					buf = buf[0:0]
-					continue
+					if rev.ID == "" && rev.Author == "" {
+						buf = buf[0:0]
+					}
+					goto cont
 				}
 
 				pos := -1
@@ -442,10 +444,10 @@ func (r *Revision) Title() string {
 		if l > 72 {
 			title += "..."
 		}
+	}
 
-		if i := bytes.IndexByte([]byte(title), '\n'); i > 0 {
-			title = title[:i]
-		}
+	if i := bytes.IndexByte([]byte(title), '\n'); i > 0 {
+		title = title[:i]
 	}
 	return title
 }
