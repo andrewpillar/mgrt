@@ -1,4 +1,4 @@
-module github.com/andrewpillar/mgrt
+module github.com/andrewpillar/mgrt/v3
 
 go 1.16
 
