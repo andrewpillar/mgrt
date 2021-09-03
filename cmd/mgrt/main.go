@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/andrewpillar/mgrt/cmd/internal"
+	"github.com/andrewpillar/mgrt/v3/cmd/internal"
 )
 
 var Build string

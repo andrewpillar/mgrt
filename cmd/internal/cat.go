@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/andrewpillar/mgrt"
+	"github.com/andrewpillar/mgrt/v3"
 )
 
 var CatCmd = &Command{
