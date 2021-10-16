@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andrewpillar/mgrt"
+	"github.com/andrewpillar/mgrt/v3"
 )
 
 var LogCmd = &Command{

@@ -7,7 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"github.com/andrewpillar/mgrt"
+	"github.com/andrewpillar/mgrt/v3"
 )
 
 var (

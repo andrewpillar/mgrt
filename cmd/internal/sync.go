@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/andrewpillar/mgrt"
+	"github.com/andrewpillar/mgrt/v3"
 )
 
 var SyncCmd = &Command{
