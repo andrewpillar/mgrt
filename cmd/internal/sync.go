@@ -74,12 +74,12 @@ func syncCmd(cmd *Command, args []string) {
 	}
 
 	if typ == "" {
-		fmt.Fprintf(os.Stderr, "%s %s: missing -type flag\n", cmd.Argv0, argv0)
+		fmt.Fprintf(os.Stderr, "%s %s: database not specified\n", cmd.Argv0, argv0)
 		os.Exit(1)
 	}
 
 	if dsn == "" {
-		fmt.Fprintf(os.Stderr, "%s %s: missing -dsn flag\n", cmd.Argv0, argv0)
+		fmt.Fprintf(os.Stderr, "%s %s: database not specified\n", cmd.Argv0, argv0)
 		os.Exit(1)
 	}
 
