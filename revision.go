@@ -419,13 +419,19 @@ func (r *Revision) Perform(db *DB) error {
 	}
 
 	if _, err := db.Exec(r.SQL); err != nil {
-		return err
+		return &RevisionError{
+			ID: r.ID,
+			Err: err,
+		}
 	}
 
 	q := db.Parameterize("INSERT INTO mgrt_revisions (id, author, comment, sql, performed_at) VALUES (?, ?, ?, ?, ?)")
 
 	if _, err := db.Exec(q, r.ID, r.Author, r.Comment, r.SQL, time.Now().Unix()); err != nil {
-		return err
+		return &RevisionError{
+			ID: r.ID,
+			Err: err,
+		}
 	}
 	return nil
 }

@@ -60,15 +60,17 @@ func runCmd(cmd *Command, args []string) {
 	argv0 := args[0]
 
 	var (
-		typ     string
-		dsn     string
-		dbname  string
-		verbose bool
+		typ      string
+		dsn      string
+		category string
+		dbname   string
+		verbose  bool
 	)
 
 	fs := flag.NewFlagSet(cmd.Argv0+" "+argv0, flag.ExitOnError)
 	fs.StringVar(&typ, "type", "", "the database type one of postgresql, sqlite3")
 	fs.StringVar(&dsn, "dsn", "", "the dsn for the database to run the revisions against")
+	fs.StringVar(&category, "c", "", "the category of revisions to run")
 	fs.StringVar(&dbname, "db", "", "the database to connect to")
 	fs.BoolVar(&verbose, "v", false, "display information about the revisions performed")
 	fs.Parse(args[1:])
@@ -112,28 +114,31 @@ func runCmd(cmd *Command, args []string) {
 	}
 
 	if len(revs) == 0 {
-		err := filepath.Walk(revisionsDir, func(path string, info os.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
+		dir := revisionsDir
 
-			if info.IsDir() {
-				return nil
-			}
+		if category != "" {
+			dir = filepath.Join(revisionsDir, category)
+		}
 
-			rev, err := mgrt.OpenRevision(path)
-
-			if err != nil {
-				return err
-			}
-
-			revs = append(revs, rev)
-			return nil
-		})
+		ents, err := os.ReadDir(dir)
 
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%s %s: %s\n", cmd.Argv0, argv0, err)
 			os.Exit(1)
+		}
+
+		for _, ent := range ents {
+			if ent.IsDir() {
+				continue
+			}
+
+			rev, err := mgrt.OpenRevision(filepath.Join(dir, ent.Name()))
+
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "%s %s: %s\n", cmd.Argv0, argv0, err)
+				os.Exit(1)
+			}
+			revs = append(revs, rev)
 		}
 	}
 

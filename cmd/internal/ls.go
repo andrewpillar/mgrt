@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/andrewpillar/mgrt/v3"
 )
@@ -50,6 +51,8 @@ func lsCmd(cmd *Command, args []string) {
 		if err != nil {
 			return err
 		}
+
+		rev.ID = strings.TrimPrefix(path, revisionsDir+string(os.PathSeparator))
 
 		if l := len(rev.Author); l > pad {
 			pad = l
