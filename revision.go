@@ -111,16 +111,16 @@ func RevisionPerformed(db *DB, rev *Revision) error {
 
 	q := db.Parameterize("SELECT COUNT(id) FROM mgrt_revisions WHERE (id = ?)")
 
-	if err := db.QueryRow(q, rev.ID).Scan(&count); err != nil {
+	if err := db.QueryRow(q, rev.Slug()).Scan(&count); err != nil {
 		return &RevisionError{
-			ID:  rev.ID,
+			ID:  rev.Slug(),
 			Err: err,
 		}
 	}
 
 	if count > 0 {
 		return &RevisionError{
-			ID:  rev.ID,
+			ID:  rev.Slug(),
 			Err: ErrPerformed,
 		}
 	}
@@ -143,7 +143,7 @@ func GetRevision(db *DB, id string) (*Revision, error) {
 	if err := row.Scan(&categoryid, &rev.Author, &rev.Comment, &rev.SQL, &sec); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, &RevisionError{
-				ID:  id,
+				ID:  categoryid,
 				Err: ErrNotFound,
 			}
 		}
@@ -461,7 +461,7 @@ func (r *Revision) Perform(db *DB) error {
 
 	if _, err := db.Exec(r.SQL); err != nil {
 		return &RevisionError{
-			ID: r.ID,
+			ID: r.Slug(),
 			Err: err,
 		}
 	}
@@ -470,7 +470,7 @@ func (r *Revision) Perform(db *DB) error {
 
 	if _, err := db.Exec(q, r.Slug(), r.Author, r.Comment, r.SQL, time.Now().Unix()); err != nil {
 		return &RevisionError{
-			ID: r.ID,
+			ID: r.Slug(),
 			Err: err,
 		}
 	}
