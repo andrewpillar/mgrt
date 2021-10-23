@@ -2,6 +2,7 @@ package internal
 
 import (
 	"errors"
+	"flag"
 	"fmt"
 	"os"
 	"os/exec"
@@ -16,7 +17,8 @@ var (
 	AddCmd = &Command{
 		Usage: "add [comment]",
 		Short: "add a new revision",
-		Long:  `Add will open up the editor specified via EDITOR for creating the new revision.`,
+		Long:  `Add will open up the editor specified via EDITOR for creating the new revision.
+The -c flag can be given to specify a category for the new revision.`,
 		Run:   addCmd,
 	}
 )
@@ -40,13 +42,29 @@ func openInEditor(path string) error {
 }
 
 func addCmd(cmd *Command, args []string) {
+	var category string
+
+	argv0 := args[0]
+
+	fs := flag.NewFlagSet(cmd.Argv0+ " "+argv0, flag.ExitOnError)
+	fs.StringVar(&category, "c", "", "the category to put the revision under")
+	fs.Parse(args[1:])
+
+	args = fs.Args()
+
 	var comment string
 
-	if len(args) >= 2 {
-		comment = args[1]
+	if len(args) >= 1 {
+		comment = args[0]
 	}
 
-	if err := os.MkdirAll(revisionsDir, os.FileMode(0755)); err != nil {
+	dir := revisionsDir
+
+	if category != "" {
+		dir = filepath.Join(revisionsDir, category)
+	}
+
+	if err := os.MkdirAll(dir, os.FileMode(0755)); err != nil {
 		fmt.Fprintf(os.Stderr, "%s %s: failed to create %s directory: %s", cmd.Argv0, args[0], revisionsDir, err)
 		os.Exit(1)
 	}
@@ -58,8 +76,15 @@ func addCmd(cmd *Command, args []string) {
 		os.Exit(1)
 	}
 
-	rev := mgrt.NewRevision(author, comment)
-	path := filepath.Join(revisionsDir, rev.ID+".sql")
+	var rev *mgrt.Revision
+
+	if category != "" {
+		rev = mgrt.NewRevisionCategory(category, author, comment)
+	} else {
+		rev = mgrt.NewRevision(author, comment)
+	}
+
+	path := filepath.Join(dir, rev.ID+".sql")
 
 	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE, os.FileMode(0644))
 

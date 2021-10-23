@@ -105,17 +105,28 @@ func syncCmd(cmd *Command, args []string) {
 	}
 
 	for _, rev := range revs {
-		func() {
-			f, err := os.OpenFile(filepath.Join(revisionsDir, rev.ID+".sql"), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, os.FileMode(0644))
+		dir := filepath.Join(revisionsDir, rev.Category)
+
+		err = func() error {
+			if err := os.MkdirAll(dir, os.FileMode(0755)); err != nil {
+				return err
+			}
+
+			f, err := os.OpenFile(filepath.Join(dir, rev.ID+".sql"), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, os.FileMode(0644))
 
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "%s %s: failed to sync revisions: %s\n", cmd.Argv0, argv0, err)
-				os.Exit(1)
+				return err
 			}
 
 			defer f.Close()
 
 			f.WriteString(rev.String())
+			return nil
 		}()
+
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%s %s: failed to sync revisions: %s\n", cmd.Argv0, argv0, err)
+			os.Exit(1)
+		}
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/andrewpillar/mgrt/v3"
 )
@@ -49,6 +50,14 @@ func lsCmd(cmd *Command, args []string) {
 
 		if err != nil {
 			return err
+		}
+
+		dir := filepath.Dir(path)
+
+		parts := strings.Split(dir, string(os.PathSeparator))
+
+		if len(parts) > 1 {
+			rev.ID = parts[1] + "/" + rev.ID
 		}
 
 		if l := len(rev.Author); l > pad {

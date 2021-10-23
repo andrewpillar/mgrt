@@ -6,6 +6,7 @@ scripts, runs them against the database, and keeps a log of them.
 * [Quick start](#quick-start)
 * [Database connection](#database-connection)
 * [Revisions](#revisions)
+* [Categories](#categories)
 * [Revision log](#revision-log)
 * [Viewing revisions](#viewing-revisions)
 * [Library usage](#library-usage)
@@ -139,6 +140,26 @@ Revisions are stored in the `revisions` directory from where the `mgrt add`
 command was run. Each revision file is prefixed with a comment block header
 that contains metadata about the revision itself, such as the ID, the author and
 a short comment about the revision.
+
+## Categories
+
+Revisions can be organized into categories via the command line. This is done
+by passing the `-c` flag to the `mgrt add` command and specifying the category
+for that revision. This will create a sub-directory in the `revisions` directory
+containing that revision. Revisions in a category will only be performed when
+the `-c` flag for that category is given to the `mgrt run` command.
+
+Organizing revisions into categories can be useful if you want to keep certain
+revision logic separate from other revision logic. For example, if you want to
+separate table creation from permission granting, you could do something like,
+
+    $ mgrt add -c schema "Create users table"
+    $ mgrt add -c perms "Grant permissions on users table"
+
+then, to perform the above revisions you would,
+
+    $ mgrt run -c schema -db prod
+    $ mgrt run -c perms -db prod
 
 ## Revision log
 
