@@ -438,6 +438,15 @@ func (e *RevisionError) Error() string {
 // Unwrap returns the underlying error that caused the original RevisionError.
 func (e *RevisionError) Unwrap() error { return e.Err }
 
+// Slug returns the slug of the revision ID, this will be in the format of
+// category/id if the revision belongs to a category.
+func (r *Revision) Slug() string {
+	if r.Category != "" {
+		return r.Category + "/" + r.ID
+	}
+	return r.ID
+}
+
 // Perform will perform the current Revision against the given database. If
 // the Revision is emtpy, then nothing happens. If the Revision has already
 // been performed, then ErrPerformed is returned.

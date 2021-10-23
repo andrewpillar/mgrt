@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/andrewpillar/mgrt/v3"
 )
@@ -52,14 +51,6 @@ func lsCmd(cmd *Command, args []string) {
 			return err
 		}
 
-		dir := filepath.Dir(path)
-
-		parts := strings.Split(dir, string(os.PathSeparator))
-
-		if len(parts) > 1 {
-			rev.ID = parts[1] + "/" + rev.ID
-		}
-
 		if l := len(rev.Author); l > pad {
 			pad = l
 		}
@@ -75,9 +66,9 @@ func lsCmd(cmd *Command, args []string) {
 
 	for _, r := range revs {
 		if r.Comment != "" {
-			fmt.Printf("%s: %-*s - %s\n", r.ID, pad, r.Author, r.Title())
+			fmt.Printf("%s: %-*s - %s\n", r.Slug(), pad, r.Author, r.Title())
 			continue
 		}
-		fmt.Printf("%s: %s\n", r.ID, r.Author)
+		fmt.Printf("%s: %s\n", r.Slug(), r.Author)
 	}
 }

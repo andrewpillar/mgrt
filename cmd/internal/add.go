@@ -101,5 +101,5 @@ func addCmd(cmd *Command, args []string) {
 		fmt.Fprintf(os.Stderr, "%s %s: failed to open revision file: %s", cmd.Argv0, args[0], err)
 		os.Exit(1)
 	}
-	fmt.Println("revision created", rev.ID)
+	fmt.Println("revision created", rev.Slug())
 }
