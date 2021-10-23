@@ -103,7 +103,7 @@ func logCmd(cmd *Command, args []string) {
 	}
 
 	for _, rev := range revs {
-		fmt.Println("revision", rev.ID)
+		fmt.Println("revision", rev.Slug())
 		fmt.Println("Author:    ", rev.Author)
 		fmt.Println("Performed: ", rev.PerformedAt.Format(time.ANSIC))
 		fmt.Println()

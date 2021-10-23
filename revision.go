@@ -468,13 +468,7 @@ func (r *Revision) Perform(db *DB) error {
 
 	q := db.Parameterize("INSERT INTO mgrt_revisions (id, author, comment, sql, performed_at) VALUES (?, ?, ?, ?, ?)")
 
-	id := r.ID
-
-	if r.Category != "" {
-		id = r.Category + "/" + r.ID
-	}
-
-	if _, err := db.Exec(q, id, r.Author, r.Comment, r.SQL, time.Now().Unix()); err != nil {
+	if _, err := db.Exec(q, r.Slug(), r.Author, r.Comment, r.SQL, time.Now().Unix()); err != nil {
 		return &RevisionError{
 			ID: r.ID,
 			Err: err,
@@ -510,14 +504,8 @@ func (r *Revision) Title() string {
 func (r *Revision) String() string {
 	var buf bytes.Buffer
 
-	id := r.ID
-
-	if r.Category != "" {
-		id = r.Category + "/" + r.ID
-	}
-
 	buf.WriteString("/*\n")
-	buf.WriteString("Revision: " + id + "\n")
+	buf.WriteString("Revision: " + r.Slug() + "\n")
 	buf.WriteString("Author:   " + r.Author + "\n")
 
 	if r.Comment != "" {
