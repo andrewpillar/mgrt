@@ -30,7 +30,8 @@ type Errors []error
 // a database as a revision. Typically, this would be changes made to the
 // database schema itself.
 type Revision struct {
-	ID          string    // ID is the time when the Revision was added.
+	ID          string    // ID is the unique ID of the Revision.
+	Category    string    // Category of the revision.
 	Author      string    // Author is who authored the original Revision.
 	Comment     string    // Comment provides a short description for the Revision.
 	SQL         string    // SQL is the code that will be executed when the Revision is performed.
@@ -91,6 +92,14 @@ func NewRevision(author, comment string) *Revision {
 	}
 }
 
+// NewRevisionCategory creates a new Revision in the given category with the
+// given author and comment.
+func NewRevisionCategory(category, author, comment string) *Revision {
+	rev := NewRevision(author, comment)
+	rev.Category = category
+	return rev
+}
+
 // RevisionPerformed checks to see if the given Revision has been performed
 // against the given database.
 func RevisionPerformed(db *DB, rev *Revision) error {
@@ -129,7 +138,9 @@ func GetRevision(db *DB, id string) (*Revision, error) {
 
 	row := db.QueryRow(db.Parameterize(q), id)
 
-	if err := row.Scan(&rev.ID, &rev.Author, &rev.Comment, &rev.SQL, &sec); err != nil {
+	var categoryid string
+
+	if err := row.Scan(&categoryid, &rev.Author, &rev.Comment, &rev.SQL, &sec); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, &RevisionError{
 				ID:  id,
@@ -138,6 +149,13 @@ func GetRevision(db *DB, id string) (*Revision, error) {
 		}
 		return nil, err
 	}
+
+	parts := strings.Split(categoryid, "/")
+
+	end := len(parts) - 1
+
+	rev.ID = parts[end]
+	rev.Category = strings.Join(parts[:end], "/")
 
 	rev.PerformedAt = time.Unix(sec, 0)
 	return &rev, nil
@@ -172,15 +190,23 @@ func GetRevisions(db *DB, n int) ([]*Revision, error) {
 
 	for rows.Next() {
 		var (
-			rev Revision
-			sec int64
+			rev        Revision
+			sec        int64
+			categoryid string
 		)
 
-		err = rows.Scan(&rev.ID, &rev.Author, &rev.Comment, &rev.SQL, &sec)
+		err = rows.Scan(&categoryid, &rev.Author, &rev.Comment, &rev.SQL, &sec)
 
 		if err != nil {
 			return nil, err
 		}
+
+		parts := strings.Split(categoryid, "/")
+
+		end := len(parts) - 1
+
+		rev.ID = parts[end]
+		rev.Category = strings.Join(parts[:end], "/")
 
 		rev.PerformedAt = time.Unix(sec, 0)
 		revs = append(revs, &rev)
@@ -333,6 +359,12 @@ func UnmarshalRevision(r io.Reader) (*Revision, error) {
 		r0 = r
 	}
 
+	parts := strings.Split(rev.ID, "/")
+	end := len(parts)-1
+
+	rev.ID = parts[len(parts)-1]
+	rev.Category = strings.Join(parts[:end], "/")
+
 	if _, err := time.Parse(revisionIdFormat, rev.ID); err != nil {
 		return nil, ErrInvalid
 	}
@@ -427,7 +459,13 @@ func (r *Revision) Perform(db *DB) error {
 
 	q := db.Parameterize("INSERT INTO mgrt_revisions (id, author, comment, sql, performed_at) VALUES (?, ?, ?, ?, ?)")
 
-	if _, err := db.Exec(q, r.ID, r.Author, r.Comment, r.SQL, time.Now().Unix()); err != nil {
+	id := r.ID
+
+	if r.Category != "" {
+		id = r.Category + "/" + r.ID
+	}
+
+	if _, err := db.Exec(q, id, r.Author, r.Comment, r.SQL, time.Now().Unix()); err != nil {
 		return &RevisionError{
 			ID: r.ID,
 			Err: err,
@@ -463,8 +501,14 @@ func (r *Revision) Title() string {
 func (r *Revision) String() string {
 	var buf bytes.Buffer
 
+	id := r.ID
+
+	if r.Category != "" {
+		id = r.Category + "/" + r.ID
+	}
+
 	buf.WriteString("/*\n")
-	buf.WriteString("Revision: " + r.ID + "\n")
+	buf.WriteString("Revision: " + id + "\n")
 	buf.WriteString("Author:   " + r.Author + "\n")
 
 	if r.Comment != "" {

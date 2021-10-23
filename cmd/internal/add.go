@@ -17,7 +17,8 @@ var (
 	AddCmd = &Command{
 		Usage: "add [comment]",
 		Short: "add a new revision",
-		Long:  `Add will open up the editor specified via EDITOR for creating the new revision.`,
+		Long:  `Add will open up the editor specified via EDITOR for creating the new revision.
+The -c flag can be given to specify a category for the new revision.`,
 		Run:   addCmd,
 	}
 )
@@ -75,7 +76,14 @@ func addCmd(cmd *Command, args []string) {
 		os.Exit(1)
 	}
 
-	rev := mgrt.NewRevision(author, comment)
+	var rev *mgrt.Revision
+
+	if category != "" {
+		rev = mgrt.NewRevisionCategory(category, author, comment)
+	} else {
+		rev = mgrt.NewRevision(author, comment)
+	}
+
 	path := filepath.Join(dir, rev.ID+".sql")
 
 	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE, os.FileMode(0644))

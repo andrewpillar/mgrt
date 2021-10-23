@@ -16,6 +16,9 @@ var RunCmd = &Command{
 to connect to is specified via the -type and -dsn flags, or via the -db flag if a database
 connection has been configured via the "mgrt db" command.
 
+The -c flag specifies the category of revisions to run. If not given, then the
+default revisions will be run.
+
 The -type flag specifies the type of database to connect to, it will be one of,
 
     mysql

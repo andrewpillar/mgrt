@@ -52,7 +52,13 @@ func lsCmd(cmd *Command, args []string) {
 			return err
 		}
 
-		rev.ID = strings.TrimPrefix(path, revisionsDir+string(os.PathSeparator))
+		dir := filepath.Dir(path)
+
+		parts := strings.Split(dir, string(os.PathSeparator))
+
+		if len(parts) > 1 {
+			rev.ID = parts[1] + "/" + rev.ID
+		}
 
 		if l := len(rev.Author); l > pad {
 			pad = l
