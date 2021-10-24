@@ -30,7 +30,6 @@ func mgrtAuthor() (string, error) {
 	stdout, _, err := git("config", "user.name")
 
 	if err != nil {
-		println(err.Error())
 		u, err := user.Current()
 
 		if err != nil {
