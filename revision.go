@@ -62,7 +62,7 @@ var (
 
 	// ErrPerformed is returned whenever a Revision has already been performed.
 	// This can be treated as a benign error.
-	ErrPerformed = errors.New("revision performed")
+	ErrPerformed = errors.New("revision already performed")
 
 	ErrNotFound = errors.New("revision not found")
 )

@@ -154,15 +154,27 @@ func runCmd(cmd *Command, args []string) {
 
 	defer db.Close()
 
-	if err := mgrt.PerformRevisions(db, revs...); err != nil {
-		if _, ok := err.(mgrt.Errors); ok {
-			if verbose {
-				fmt.Fprintf(os.Stderr, "%s", err)
-			}
-			return
+	var c mgrt.Collection
+
+	for _, rev := range revs {
+		c.Put(rev)
+	}
+
+	code := 0
+
+	for _, rev := range c.Slice() {
+		if err := rev.Perform(db); err != nil {
+			fmt.Fprintf(os.Stderr, "%s\n", err)
+			code = 1
+			continue
 		}
 
-		fmt.Fprintf(os.Stderr, "%s %s: %s\n", cmd.Argv0, argv0, err)
-		os.Exit(1)
+		if verbose {
+			fmt.Println(rev.ID, rev.Title())
+		}
+	}
+
+	if code != 0 {
+		os.Exit(code)
 	}
 }
