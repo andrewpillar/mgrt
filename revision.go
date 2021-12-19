@@ -423,6 +423,10 @@ func (c *Collection) Len() int { return c.len }
 
 // Slice returns a sorted slice of all the revisions in the collection.
 func (c *Collection) Slice() []*Revision {
+	if c.len == 0 {
+		return nil
+	}
+
 	revs := make([]*Revision, 0, c.len)
 
 	c.root.walk(func(r *Revision) {
