@@ -183,14 +183,14 @@ func dbSetCmd(cmd *Command, args []string) {
 
 	if err != nil {
 		if !os.IsNotExist(err) {
-			fmt.Fprintf(os.Stderr, "%s: %s\n", cmd.Argv0, argv0, err)
+			fmt.Fprintf(os.Stderr, "%s %s: %s\n", cmd.Argv0, argv0, err)
 			os.Exit(1)
 		}
 	}
 
 	if err == nil {
 		if err := os.RemoveAll(fname); err != nil {
-			fmt.Fprintf(os.Stderr, "%s: %s\n", cmd.Argv0, argv0, err)
+			fmt.Fprintf(os.Stderr, "%s %s: %s\n", cmd.Argv0, argv0, err)
 			os.Exit(1)
 		}
 	}

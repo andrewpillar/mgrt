@@ -3,7 +3,6 @@ package internal
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 
 	"github.com/andrewpillar/mgrt/v3"
 )
@@ -34,34 +33,17 @@ func lsCmd(cmd *Command, args []string) {
 
 	pad := 0
 
-	revs := make([]*mgrt.Revision, 0)
-
-	err = filepath.Walk(revisionsDir, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-
-		if info.IsDir() {
-			return nil
-		}
-
-		rev, err := mgrt.OpenRevision(path)
-
-		if err != nil {
-			return err
-		}
-
-		if l := len(rev.Author); l > pad {
-			pad = l
-		}
-
-		revs = append(revs, rev)
-		return nil
-	})
+	revs, err := mgrt.LoadRevisions(revisionsDir)
 
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s %s: failed to list revision: %s\n", cmd.Argv0, args[0], err)
 		os.Exit(1)
+	}
+
+	for _, rev := range revs {
+		if l := len(rev.Author); l > pad {
+			pad = l
+		}
 	}
 
 	for _, r := range revs {

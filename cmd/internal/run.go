@@ -123,25 +123,11 @@ func runCmd(cmd *Command, args []string) {
 			dir = filepath.Join(revisionsDir, category)
 		}
 
-		ents, err := os.ReadDir(dir)
+		revs, err = mgrt.LoadRevisions(dir)
 
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%s %s: %s\n", cmd.Argv0, argv0, err)
 			os.Exit(1)
-		}
-
-		for _, ent := range ents {
-			if ent.IsDir() {
-				continue
-			}
-
-			rev, err := mgrt.OpenRevision(filepath.Join(dir, ent.Name()))
-
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "%s %s: %s\n", cmd.Argv0, argv0, err)
-				os.Exit(1)
-			}
-			revs = append(revs, rev)
 		}
 	}
 

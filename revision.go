@@ -9,6 +9,7 @@ import (
 	"errors"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -243,6 +244,40 @@ func PerformRevisions(db *DB, revs0 ...*Revision) error {
 		}
 	}
 	return errs.err()
+}
+
+// LoadRevisions loads all of the revisions from the given directory. This will
+// only load from a file with the .sql suffix in the name.
+func LoadRevisions(dir string) ([]*Revision, error) {
+	revs := make([]*Revision, 0)
+
+	visit := func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if info.IsDir() {
+			return nil
+		}
+
+		if !strings.HasSuffix(path, ".sql") {
+			return nil
+		}
+
+		rev, err := OpenRevision(path)
+
+		if err != nil {
+			return err
+		}
+
+		revs = append(revs, rev)
+		return nil
+	}
+
+	if err := filepath.Walk(dir, visit); err != nil {
+		return nil, err
+	}
+	return revs, nil
 }
 
 // OpenRevision opens the revision at the given path.

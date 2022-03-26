@@ -226,3 +226,15 @@ func Test_RevisionPerform(t *testing.T) {
 		t.Fatalf("unexpected revision count, expected=%d, got=%d\n", len(tests), len(revs))
 	}
 }
+
+func Test_LoadRevisions(t *testing.T) {
+	revs, err := LoadRevisions("revisions")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if l := len(revs); l != 2 {
+		t.Fatalf("unexpected revision count, expected=%d, got=%d\n", l, 2)
+	}
+}
