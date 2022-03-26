@@ -395,7 +395,7 @@ func UnmarshalRevision(r io.Reader) (*Revision, error) {
 	}
 
 	parts := strings.Split(rev.ID, "/")
-	end := len(parts)-1
+	end := len(parts) - 1
 
 	rev.ID = parts[len(parts)-1]
 	rev.Category = strings.Join(parts[:end], "/")
@@ -500,7 +500,7 @@ func (r *Revision) Perform(db *DB) error {
 
 	if _, err := db.Exec(r.SQL); err != nil {
 		return &RevisionError{
-			ID: r.Slug(),
+			ID:  r.Slug(),
 			Err: err,
 		}
 	}
@@ -509,7 +509,7 @@ func (r *Revision) Perform(db *DB) error {
 
 	if _, err := db.Exec(q, r.Slug(), r.Author, r.Comment, r.SQL, time.Now().Unix()); err != nil {
 		return &RevisionError{
-			ID: r.Slug(),
+			ID:  r.Slug(),
 			Err: err,
 		}
 	}

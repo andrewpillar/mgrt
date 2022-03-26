@@ -13,7 +13,7 @@ import (
 var ShowCmd = &Command{
 	Usage: "show [revision]",
 	Short: "show the given revision",
-	Long:  `Show will show the SQL that was run in the given revision. If no revision is
+	Long: `Show will show the SQL that was run in the given revision. If no revision is
 specified, then the latest revision will be shown, if any. The database to connect to is
 specified via the -type and -dsn flags, or via the -db flag if a database connection has
 been configured via the "mgrt db" command.

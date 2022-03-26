@@ -17,9 +17,9 @@ var (
 	AddCmd = &Command{
 		Usage: "add [comment]",
 		Short: "add a new revision",
-		Long:  `Add will open up the editor specified via EDITOR for creating the new revision.
+		Long: `Add will open up the editor specified via EDITOR for creating the new revision.
 The -c flag can be given to specify a category for the new revision.`,
-		Run:   addCmd,
+		Run: addCmd,
 	}
 )
 
@@ -46,7 +46,7 @@ func addCmd(cmd *Command, args []string) {
 
 	argv0 := args[0]
 
-	fs := flag.NewFlagSet(cmd.Argv0+ " "+argv0, flag.ExitOnError)
+	fs := flag.NewFlagSet(cmd.Argv0+" "+argv0, flag.ExitOnError)
 	fs.StringVar(&category, "c", "", "the category to put the revision under")
 	fs.Parse(args[1:])
 
