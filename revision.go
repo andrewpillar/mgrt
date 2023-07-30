@@ -179,7 +179,7 @@ func GetRevisions(db *DB, n int) ([]*Revision, error) {
 
 	revs := make([]*Revision, 0, int(count))
 
-	q := "SELECT id, author, comment, sql, performed_at FROM mgrt_revisions ORDER BY id DESC LIMIT ?"
+	q := "SELECT id, author, comment, sql, performed_at FROM mgrt_revisions ORDER BY performed_at DESC LIMIT ?"
 
 	rows, err := db.Query(db.Parameterize(q), count)
 
