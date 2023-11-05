@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"flag"
 	"fmt"
 	"os"
 
@@ -15,6 +16,12 @@ var LsCmd = &Command{
 }
 
 func lsCmd(cmd *Command, args []string) {
+	var category string
+
+	fs := flag.NewFlagSet(cmd.Argv0, flag.ExitOnError)
+	fs.StringVar(&category, "c", "", "the category to list the revisions of")
+	fs.Parse(args[1:])
+
 	info, err := os.Stat(revisionsDir)
 
 	if err != nil {
@@ -46,11 +53,19 @@ func lsCmd(cmd *Command, args []string) {
 		}
 	}
 
+	show := true
+
 	for _, r := range revs {
-		if r.Comment != "" {
-			fmt.Printf("%s: %-*s - %s\n", r.Slug(), pad, r.Author, r.Title())
-			continue
+		if category != "" {
+			show = r.Category == category
 		}
-		fmt.Printf("%s: %s\n", r.Slug(), r.Author)
+
+		if show {
+			if r.Comment != "" {
+				fmt.Printf("%s: %-*s - %s\n", r.Slug(), pad, r.Author, r.Title())
+				continue
+			}
+			fmt.Printf("%s: %s\n", r.Slug(), r.Author)
+		}
 	}
 }
