@@ -44,9 +44,7 @@ func openInEditor(path string) error {
 func addCmd(cmd *Command, args []string) {
 	var category string
 
-	argv0 := args[0]
-
-	fs := flag.NewFlagSet(cmd.Argv0+" "+argv0, flag.ExitOnError)
+	fs := flag.NewFlagSet(cmd.Argv0, flag.ExitOnError)
 	fs.StringVar(&category, "c", "", "the category to put the revision under")
 	fs.Parse(args[1:])
 
@@ -65,14 +63,14 @@ func addCmd(cmd *Command, args []string) {
 	}
 
 	if err := os.MkdirAll(dir, os.FileMode(0755)); err != nil {
-		fmt.Fprintf(os.Stderr, "%s %s: failed to create %s directory: %s", cmd.Argv0, args[0], revisionsDir, err)
+		fmt.Fprintf(os.Stderr, "%s: failed to create %s directory: %s", cmd.Argv0, revisionsDir, err)
 		os.Exit(1)
 	}
 
 	author, err := mgrtAuthor()
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s %s: failed to get mgrt author: %s", cmd.Argv0, args[0], err)
+		fmt.Fprintf(os.Stderr, "%s: failed to get mgrt author: %s", cmd.Argv0, err)
 		os.Exit(1)
 	}
 
@@ -89,7 +87,7 @@ func addCmd(cmd *Command, args []string) {
 	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE, os.FileMode(0644))
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s %s: failed to create revision: %s", cmd.Argv0, args[0], err)
+		fmt.Fprintf(os.Stderr, "%s: failed to create revision: %s", cmd.Argv0, err)
 		os.Exit(1)
 	}
 
@@ -98,7 +96,7 @@ func addCmd(cmd *Command, args []string) {
 	f.WriteString(rev.String())
 
 	if err := openInEditor(path); err != nil {
-		fmt.Fprintf(os.Stderr, "%s %s: failed to open revision file: %s", cmd.Argv0, args[0], err)
+		fmt.Fprintf(os.Stderr, "%s: failed to open revision file: %s", cmd.Argv0, err)
 		os.Exit(1)
 	}
 	fmt.Println("revision created", rev.Slug())

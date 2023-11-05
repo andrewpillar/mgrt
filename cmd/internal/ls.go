@@ -22,12 +22,12 @@ func lsCmd(cmd *Command, args []string) {
 			return
 		}
 
-		fmt.Fprintf(os.Stderr, "%s %s: failed to list revisions: %s\n", cmd.Argv0, args[0], err)
+		fmt.Fprintf(os.Stderr, "%s: failed to list revisions: %s\n", cmd.Argv0, err)
 		os.Exit(1)
 	}
 
 	if !info.IsDir() {
-		fmt.Fprintf(os.Stderr, "%s %s: %s is not a directory\n", cmd.Argv0, args[0], revisionsDir)
+		fmt.Fprintf(os.Stderr, "%s: %s is not a directory\n", cmd.Argv0, revisionsDir)
 		os.Exit(1)
 	}
 
@@ -36,7 +36,7 @@ func lsCmd(cmd *Command, args []string) {
 	revs, err := mgrt.LoadRevisions(revisionsDir)
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s %s: failed to list revision: %s\n", cmd.Argv0, args[0], err)
+		fmt.Fprintf(os.Stderr, "%s: failed to list revision: %s\n", cmd.Argv0, err)
 		os.Exit(1)
 	}
 

@@ -114,12 +114,10 @@ func dbCmd(cmd *Command, args []string) {
 }
 
 func dbLsCmd(cmd *Command, args []string) {
-	argv0 := args[0]
-
 	dir, err := mgrtdir()
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s %s: %s\n", cmd.Argv0, argv0, err)
+		fmt.Fprintf(os.Stderr, "%s: %s\n", cmd.Argv0, err)
 		os.Exit(1)
 	}
 
@@ -151,23 +149,21 @@ func dbLsCmd(cmd *Command, args []string) {
 	})
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s %s: %s\n", cmd.Argv0, argv0, err)
+		fmt.Fprintf(os.Stderr, "%s: %s\n", cmd.Argv0, err)
 		os.Exit(1)
 	}
 }
 
 func dbSetCmd(cmd *Command, args []string) {
-	argv0 := args[0]
-
 	if len(args[1:]) != 3 {
-		fmt.Fprintf(os.Stderr, "usage: %s %s <name> <type> <dsn>\n", cmd.Argv0, argv0)
+		fmt.Fprintf(os.Stderr, "usage: %s <name> <type> <dsn>\n", cmd.Argv0)
 		os.Exit(1)
 	}
 
 	dir, err := mgrtdir()
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s %s: %s\n", cmd.Argv0, argv0, err)
+		fmt.Fprintf(os.Stderr, "%s: %s\n", cmd.Argv0, err)
 		os.Exit(1)
 	}
 
@@ -183,14 +179,14 @@ func dbSetCmd(cmd *Command, args []string) {
 
 	if err != nil {
 		if !os.IsNotExist(err) {
-			fmt.Fprintf(os.Stderr, "%s %s: %s\n", cmd.Argv0, argv0, err)
+			fmt.Fprintf(os.Stderr, "%s: %s\n", cmd.Argv0, err)
 			os.Exit(1)
 		}
 	}
 
 	if err == nil {
 		if err := os.RemoveAll(fname); err != nil {
-			fmt.Fprintf(os.Stderr, "%s %s: %s\n", cmd.Argv0, argv0, err)
+			fmt.Fprintf(os.Stderr, "%s: %s\n", cmd.Argv0, err)
 			os.Exit(1)
 		}
 	}
@@ -198,30 +194,28 @@ func dbSetCmd(cmd *Command, args []string) {
 	f, err := os.OpenFile(fname, os.O_CREATE|os.O_WRONLY, os.FileMode(0400))
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s %s: %s\n", cmd.Argv0, argv0, err)
+		fmt.Fprintf(os.Stderr, "%s: %s\n", cmd.Argv0, err)
 		os.Exit(1)
 	}
 
 	defer f.Close()
 
 	if err := json.NewEncoder(f).Encode(&it); err != nil {
-		fmt.Fprintf(os.Stderr, "%s %s: %s\n", cmd.Argv0, argv0, err)
+		fmt.Fprintf(os.Stderr, "%s: %s\n", cmd.Argv0, err)
 		os.Exit(1)
 	}
 }
 
 func dbRmCmd(cmd *Command, args []string) {
-	argv0 := args[0]
-
 	if len(args[1:]) < 1 {
-		fmt.Fprintf(os.Stderr, "usage: %s %s <name,...>\n", cmd.Argv0, argv0)
+		fmt.Fprintf(os.Stderr, "usage: %s <name,...>\n", cmd.Argv0)
 		os.Exit(1)
 	}
 
 	dir, err := mgrtdir()
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s %s: %s\n", cmd.Argv0, argv0, err)
+		fmt.Fprintf(os.Stderr, "%s: %s\n", cmd.Argv0, err)
 		os.Exit(1)
 	}
 

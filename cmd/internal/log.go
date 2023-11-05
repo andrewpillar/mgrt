@@ -44,8 +44,6 @@ sqlite3 however will accept a filepath, or the :memory: string, for example,
 }
 
 func logCmd(cmd *Command, args []string) {
-	argv0 := args[0]
-
 	var (
 		typ    string
 		dsn    string
@@ -53,7 +51,7 @@ func logCmd(cmd *Command, args []string) {
 		n      int
 	)
 
-	fs := flag.NewFlagSet(cmd.Argv0+" "+argv0, flag.ExitOnError)
+	fs := flag.NewFlagSet(cmd.Argv0, flag.ExitOnError)
 	fs.StringVar(&typ, "type", "", "the database type one of postgresql, sqlite3")
 	fs.StringVar(&dsn, "dsn", "", "the dsn for the database to run the revisions against")
 	fs.StringVar(&dbname, "db", "", "the database to connect to")
@@ -65,10 +63,10 @@ func logCmd(cmd *Command, args []string) {
 
 		if err != nil {
 			if os.IsNotExist(err) {
-				fmt.Fprintf(os.Stderr, "%s %s: database %s does not exist\n", cmd.Argv0, argv0, dbname)
+				fmt.Fprintf(os.Stderr, "%s: database %s does not exist\n", cmd.Argv0, dbname)
 				os.Exit(1)
 			}
-			fmt.Fprintf(os.Stderr, "%s %s: %s\n", cmd.Argv0, argv0, err)
+			fmt.Fprintf(os.Stderr, "%s: %s\n", cmd.Argv0, err)
 			os.Exit(1)
 		}
 
@@ -77,19 +75,19 @@ func logCmd(cmd *Command, args []string) {
 	}
 
 	if typ == "" {
-		fmt.Fprintf(os.Stderr, "%s %s: database not specified\n", cmd.Argv0, argv0)
+		fmt.Fprintf(os.Stderr, "%s: database not specified\n", cmd.Argv0)
 		os.Exit(1)
 	}
 
 	if dsn == "" {
-		fmt.Fprintf(os.Stderr, "%s %s: database not specified\n", cmd.Argv0, argv0)
+		fmt.Fprintf(os.Stderr, "%s: database not specified\n", cmd.Argv0)
 		os.Exit(1)
 	}
 
 	db, err := mgrt.Open(typ, dsn)
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s %s: %s\n", cmd.Argv0, argv0, err)
+		fmt.Fprintf(os.Stderr, "%s: %s\n", cmd.Argv0, err)
 		os.Exit(1)
 	}
 
@@ -98,7 +96,7 @@ func logCmd(cmd *Command, args []string) {
 	revs, err := mgrt.GetRevisions(db, n)
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s %s: failed to get revisions: %s\n", cmd.Argv0, argv0, err)
+		fmt.Fprintf(os.Stderr, "%s: failed to get revisions: %s\n", cmd.Argv0, err)
 		os.Exit(1)
 	}
 

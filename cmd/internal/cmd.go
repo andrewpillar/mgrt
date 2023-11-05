@@ -117,7 +117,7 @@ func (c *CommandSet) Add(name string, cmd *Command) {
 			c.longest = l
 		}
 
-		cmd.Argv0 = c.Argv0
+		cmd.Argv0 = c.Argv0 + " " + name
 
 		c.names = append(c.names, name)
 		c.cmds[name] = cmd
@@ -137,6 +137,7 @@ func (c *CommandSet) Parse(args []string) error {
 	if !ok {
 		return ErrCommandNotFound(name)
 	}
+
 	cmd.Run(cmd, args)
 	return nil
 }

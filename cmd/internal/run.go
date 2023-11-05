@@ -51,16 +51,14 @@ func runCmd(cmd *Command, args []string) {
 			return
 		}
 
-		fmt.Fprintf(os.Stderr, "%s %s: failed to run revisions: %s\n", cmd.Argv0, args[0], err)
+		fmt.Fprintf(os.Stderr, "%s: failed to run revisions: %s\n", cmd.Argv0, err)
 		os.Exit(1)
 	}
 
 	if !info.IsDir() {
-		fmt.Fprintf(os.Stderr, "%s %s: %s is not a directory\n", cmd.Argv0, args[0], revisionsDir)
+		fmt.Fprintf(os.Stderr, "%s: %s is not a directory\n", cmd.Argv0, revisionsDir)
 		os.Exit(1)
 	}
-
-	argv0 := args[0]
 
 	var (
 		typ      string
@@ -70,7 +68,7 @@ func runCmd(cmd *Command, args []string) {
 		verbose  bool
 	)
 
-	fs := flag.NewFlagSet(cmd.Argv0+" "+argv0, flag.ExitOnError)
+	fs := flag.NewFlagSet(cmd.Argv0, flag.ExitOnError)
 	fs.StringVar(&typ, "type", "", "the database type one of postgresql, sqlite3")
 	fs.StringVar(&dsn, "dsn", "", "the dsn for the database to run the revisions against")
 	fs.StringVar(&category, "c", "", "the category of revisions to run")
@@ -83,10 +81,10 @@ func runCmd(cmd *Command, args []string) {
 
 		if err != nil {
 			if os.IsNotExist(err) {
-				fmt.Fprintf(os.Stderr, "%s %s: database %s does not exist\n", cmd.Argv0, argv0, dbname)
+				fmt.Fprintf(os.Stderr, "%s: database %s does not exist\n", cmd.Argv0, dbname)
 				os.Exit(1)
 			}
-			fmt.Fprintf(os.Stderr, "%s %s: %s\n", cmd.Argv0, argv0, err)
+			fmt.Fprintf(os.Stderr, "%s: %s\n", cmd.Argv0, err)
 			os.Exit(1)
 		}
 
@@ -95,12 +93,12 @@ func runCmd(cmd *Command, args []string) {
 	}
 
 	if typ == "" {
-		fmt.Fprintf(os.Stderr, "%s %s: database not specified\n", cmd.Argv0, argv0)
+		fmt.Fprintf(os.Stderr, "%s: database not specified\n", cmd.Argv0)
 		os.Exit(1)
 	}
 
 	if dsn == "" {
-		fmt.Fprintf(os.Stderr, "%s %s: database not specified\n", cmd.Argv0, argv0)
+		fmt.Fprintf(os.Stderr, "%s: database not specified\n", cmd.Argv0)
 		os.Exit(1)
 	}
 
@@ -110,7 +108,7 @@ func runCmd(cmd *Command, args []string) {
 		rev, err := mgrt.OpenRevision(revisionPath(id))
 
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s %s: failed to open revision %s: %s\n", cmd.Argv0, argv0, id, err)
+			fmt.Fprintf(os.Stderr, "%s: failed to open revision %s: %s\n", cmd.Argv0, id, err)
 			os.Exit(1)
 		}
 		revs = append(revs, rev)
@@ -126,7 +124,7 @@ func runCmd(cmd *Command, args []string) {
 		revs, err = mgrt.LoadRevisions(dir)
 
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s %s: %s\n", cmd.Argv0, argv0, err)
+			fmt.Fprintf(os.Stderr, "%s: %s\n", cmd.Argv0, err)
 			os.Exit(1)
 		}
 	}
@@ -134,7 +132,7 @@ func runCmd(cmd *Command, args []string) {
 	db, err := mgrt.Open(typ, dsn)
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s %s: %s\n", cmd.Argv0, argv0, err)
+		fmt.Fprintf(os.Stderr, "%s: %s\n", cmd.Argv0, err)
 		os.Exit(1)
 	}
 
