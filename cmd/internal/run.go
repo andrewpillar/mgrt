@@ -48,7 +48,8 @@ func runCmd(cmd *Command, args []string) {
 
 	if err != nil {
 		if os.IsNotExist(err) {
-			return
+			fmt.Fprintf(os.Stderr, "%s: no revisions to run\n", cmd.Argv0)
+			os.Exit(1)
 		}
 
 		fmt.Fprintf(os.Stderr, "%s: failed to run revisions: %s\n", cmd.Argv0, err)
