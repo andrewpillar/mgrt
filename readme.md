@@ -138,7 +138,7 @@ Next, load in the revisions. This can be done via the [mgrt.Load][] function,
 which takes an [fs.FS][] interface and the path to load from.
 
 [mgrt.Load]: https://pkg.go.dev/github.com/andrewpillar/mgrt#Load
-[fs.FS]: https://pkg.go.dev/io/fs/fs#FS
+[fs.FS]: https://pkg.go.dev/io/fs#FS
 
 ```go
 revs, err := mgrt.Load(os.DirFS("revisions/"), ".")
