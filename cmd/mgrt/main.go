@@ -4,32 +4,29 @@ import (
 	"flag"
 	"fmt"
 	"os"
-
-	"github.com/andrewpillar/mgrt/v3/cmd/internal"
 )
 
 var Build string
 
 func run(args []string) error {
-	cmds := &internal.CommandSet{
+	cmds := CommandSet{
 		Argv0: args[0],
-		Long: `mgrt is a simple migration tool.
+		Long: `mgrt performs and keeps track of SQL revisions performed against a database.
+This should be used during development to allow for quick iteration on database
+schemas.
 
 Usage:
 
-    mgrt [-version] <command> [arguments]
+    mgrt <command> [arguments]
 `,
 	}
 
-	cmds.Add("add", internal.AddCmd)
-	cmds.Add("cat", internal.CatCmd)
-	cmds.Add("db", internal.DBCmd(cmds.Argv0))
-	cmds.Add("log", internal.LogCmd)
-	cmds.Add("ls", internal.LsCmd)
-	cmds.Add("run", internal.RunCmd)
-	cmds.Add("show", internal.ShowCmd)
-	cmds.Add("sync", internal.SyncCmd)
-	cmds.Add("help", internal.HelpCmd(cmds))
+	cmds.Add("add", AddCmd)
+	cmds.Add("up", UpCmd)
+	cmds.Add("down", DownCmd)
+	cmds.Add("log", LogCmd)
+
+	cmds.Add("help", HelpCmd(&cmds))
 
 	var version bool
 
@@ -41,12 +38,12 @@ Usage:
 		fmt.Println(Build)
 		return nil
 	}
-	return cmds.Parse(fs.Args())
+	return cmds.Parse(args[1:])
 }
 
 func main() {
 	if err := run(os.Args); err != nil {
-		fmt.Fprintf(os.Stderr, "%s: %s\n", os.Args[0], err)
+		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }

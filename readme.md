@@ -4,253 +4,194 @@ mgrt is a simple tool for managing revisions across SQL databases. It takes SQL
 scripts, runs them against the database, and keeps a log of them.
 
 * [Quick start](#quick-start)
-* [Database connection](#database-connection)
-* [Revisions](#revisions)
-* [Categories](#categories)
-* [Revision log](#revision-log)
-* [Viewing revisions](#viewing-revisions)
 * [Library usage](#library-usage)
 
 ## Quick start
 
-To install mgrt, clone the repository and run the `./make.sh` script,
+To install mgrt, clone the repository and run `make install`,
 
-    $ git clone https://github.com/andrewpillar/mgrt
-    $ cd mgrt
-    $ ./make.sh
+```shell
+$ git clone https://github.com/andrewpillar/mgrt
+$ cd mgrt/
+$ make install
+```
 
-to build mgrt with SQLite3 support add `sqlite3` to the `TAGS` environment
-variable,
+Once installed, you can start using mgrt right away, there is nothing to
+initialize. To begin writing revisions simply run the `mgrt add` command,
 
-    $ TAGS="sqlite3" ./make.sh
+```shell
+$ mgrt add "My first revision"
+```
 
-this will produce a binary at `bin/mgrt`, add this to your `PATH`.
+this will create a new revision file in the `revisions`directory and open it up
+for editting,
 
-Once installed you can start using mgrt right away, there is nothing to
-initialize. To begin writing revisions simply invoke `mgrt add`,
+```
+/*
+ * My first revision
+ */
+-- +up
 
-    $ mgrt add "My first revision"
+-- +down
+```
 
-this will create a new revision file in the `revisions` directory, and open
-it up for editting with the revision to write,
+the file will be pre-populated with the comment given to the `add` command and
+the `-- +up` and `-- +down` annotations which delineate which SQL code should be
+performed for the `up` and `down` commands.
 
-    /*
-    Revision: 20060102150405
-    Author:   Andrew Pillar <me@andrewpillar.com>
-    
-    My first revision
-    */
+Write some SQL code that will create a table for both the up and down
+annotations,
 
-    CREATE TABLE users (
-        id INT NOT NULL UNIQUE
+```sql
+/*
+ * My first revision
+ */
+-- +up
+
+CREATE TABLE IF NOT EXISTS users (
+    id INT PRIMARY KEY
+);
+
+-- +down
+
+DROP TABLE IF EXISTS users;
+```
+
+once the revision has been saved the revision name will be printed out,
+
+```shell
+$ mgrt add "My first revision"
+revision created revisions/2006-01-02T15-04-05-My-first-revision.sql
+```
+
+This can now be performed against a database via the `up` command. This
+command takes a single argument which is the DSN to the database.
+
+```shell
+$ mgrt up -v example-db.sqlite revisions/
+up   3718effeb revisions/2006-01-02T15-04-05-My-first-revision.sql
+```
+
+The first argument the `up` command takes is the DSN to the database. This takes
+the format of a URL, and the scheme can be used to specify the type of database
+to connect to, which can either be `sqlite` or `postgresql`. If no scheme is
+given, then `sqlite` is used.
+
+For example, to perform a revision against a PostgreSQL database you would run,
+
+```shell
+$ mgrt up "postgresql://user:password@db.example.com:5432/dbname" revisions/
+```
+
+If the `up` command is performed twice on the same set of revisions already
+performed then no further changes are made.
+
+```shell
+$ mgrt up -v example-db.sqlite revisions/
+no new revisions to perform
+```
+
+If we want to perform the revisions again, we can perform them via the `down`
+command which will execute the SQL code for the `-- +down` annotation,
+
+```
+$ mgrt down -v example-db.sqlite revisions/
+down 3718effeb revisions/2006-01-02T15-04-05-My-first-revision.sql
+```
+
+Now that some revisions have been performed, they can be viewed via the `log`
+command. The `log` command will display the revisions that have been performed
+in order of most recent,
+
+```
+$ mgrt log example-db.sqlite
+down 3718effeb2d7350c862b86fe56c000b3f91b92c095476580f0d0ec66c68173bd
+Revision:     revisions/2006-01-02T15-04-05-My-first-revision.sql
+Performed at: Mon Jan 6 15:04:05 2006
+My first revision
+
+    DROP TABLE IF EXISTS users;
+
+up   3718effeb2d7350c862b86fe56c000b3f91b92c095476580f0d0ec66c68173bd
+Revision:     revisions/2006-01-02T15-04-05-My-first-revision.sql
+Performed at: Mon Jan 6 15:04:05 2006
+My first revision
+
+    CREATE TABLE IF NOT EXISTS users (
+        id INT PRIMARY KEY
     );
 
-once you've saved the revision and quit the editor, you will see the revision ID
-printed out,
-
-    $ mgrt add "My first revision"
-    revision created 20060102150405
-
-local revisions can be viewed with `mgrt ls`. This will display the ID, the
-author of the revision, and its comment, if any,
-
-    $ mgrt ls
-    20060102150405: Andrew Pillar <me@andrewpillar.com> - My first revision
-
-revisions can be applied to the database via `mgrt run`. This command takes two
-flags, `-type` and `-dsn` to specify the type of database to run the revision
-against, and the data source for that database. Let's run our revision against
-an SQLite3 database,
-
-    $ mgrt run -type sqlite3 -dsn acme.db
-
-revisions can only be performed on a database once, and cannot be undone. We can
-view the revisions that have been run against the database with `mgrt log`. Just
-like `mgrt run`, we use the `-type` and `-dsn` flags to specify the database to
-connect to,
-
-    $ mgrt log -type sqlite3 -dsn acme.db
-    revision 20060102150405
-    Author:    Andrew Pillar <me@andrewpillar.com>
-    Performed: Mon Jan  6 15:04:05 2006
-    My first revision
-    
-        CREATE TABLE users (
-            id INT NOT NULL UNIQUE
-        );
-
-this will list out the revisions that have been performed, along with the SQL
-code that was executed as part of that revision.
-
-mgrt also offers the ability to sync the revisions that have been performed on
-a database against what you have locally. This is achieved with `mgrt sync`, and
-just like before, this also takes the `-type` and `-dsn` flags. Lets delete the
-`revisions` directory that was created for us and do a `mgrt sync`.
-
-    $ rm -rf revisions
-    $ mgrt ls
-    $ mgrt sync -type sqlite3 -dsn acme.db
-    $ mgrt ls
-    20060102150405: Andrew Pillar <me@andrewpillar.com> - My first revision
-
-with `mgrt sync` you can easily view the revisions that have been run against
-different databases.
-
-## Database connection
-
-Database connections for mgrt can be managed via the `mgrt db` command. This
-allows you to set aliases for the different databases you can connect to,
-for example,
-
-    $ mgrt db set local-db postgresql "host=localhost port=5432 dbname=dev user=admin password=secret"
-
-this can then be used via the `-db` flag for the commands that require a
-database connection.
-
-The `mgrt db set` command expects the type of the database, and the DSN for
-connecting to the database. The type will be one of,
-
-* mysql
-* postgresql
-* sqlite3
-
-the DSN will vary depending on the type of database being used. The mysql and
-postgresql you can use the URI connection string, such as,
-
-    type://[user[:password]@][host]:[port][,...][/dbname][?param1=value1&...]
-
-where type would either be mysql or postgresql. The postgresql type also allows
-for the DSN string such as,
-
-    host=localhost port=5432 dbname=mydb connect_timeout=10
-
-sqlite3 however will accept a filepath.
-
-You can also specify the `-type` and `-dsn` flags too. These take the same
-arguments as above. The `-db` flag however is more convenient to use.
-
-## Revisions
-
-Revisions are SQL scripts that are performed against the given database. Each
-revision can only be performed once, and cannot be undone. If you wish to undo
-a revision, then it is recommended to write another revision that does the
-inverse of the prior.
-
-Revisions are stored in the `revisions` directory from where the `mgrt add`
-command was run. Each revision file is prefixed with a comment block header
-that contains metadata about the revision itself, such as the ID, the author and
-a short comment about the revision.
-
-## Categories
-
-Revisions can be organized into categories via the command line. This is done
-by passing the `-c` flag to the `mgrt add` command and specifying the category
-for that revision. This will create a sub-directory in the `revisions` directory
-containing that revision. Revisions in a category will only be performed when
-the `-c` flag for that category is given to the `mgrt run` command.
-
-Organizing revisions into categories can be useful if you want to keep certain
-revision logic separate from other revision logic. For example, if you want to
-separate table creation from permission granting, you could do something like,
-
-    $ mgrt add -c schema "Create users table"
-    $ mgrt add -c perms "Grant permissions on users table"
-
-then, to perform the above revisions you would,
-
-    $ mgrt run -c schema -db prod
-    $ mgrt run -c perms -db prod
-
-## Revision log
-
-Each time a revision is performed, a log will be made of that revision. This log
-is stored in the database, in the `mgrt_revisions` table. This will contain the
-ID, the author, the comment (if any), and the SQL code itself, along with the
-time of execution.
-
-The revisions performed against a database can be viewed with `mgrt log`,
-
-    $ mgrt log -db local-dev
-    revision 20060102150405
-    Author:    Andrew Pillar <me@andrewpillar.com>
-    Performed: Mon Jan  6 15:04:05 2006
-
-        My first revision
-
-## Viewing revisions
-
-Local revisions can be viewed with `mgrt cat`. This simply takes a list of
-revision IDs to view.
-
-    $ mgrt cat 20060102150405
-    /*
-    Revision: 20060102150405
-    Author:   Andrew Pillar <me@andrewpillar.com>
-    
-    My first revision
-    */
-    
-    CREATE TABLE users (
-            id INT NOT NULL UNIQUE
-    );
-
-The `-sql` flag can be passed to the command too to only display the SQL portion
-of the revision,
-
-    $ mgrt cat -sql 20060102150405
-    CREATE TABLE users (
-            id INT NOT NULL UNIQUE
-    );
-
-performed revisions can also be seen with `mgrt show`. You can pass a revision
-ID to `mgrt show` to view an individual revision. If no revision ID is given,
-then the latest revision is shown.
-
-    $ mgrt show -db local-dev 20060102150405
-    revision 20060102150405
-    Author:    Andrew Pillar <me@andrewpillar.com>
-    Performed: Mon Jan  6 15:04:05 2006
-
-        My first revision
-
-        CREATE TABLE users (
-                id INT NOT NULL UNIQUE
-        );
+```
 
 ## Library usage
 
-As well as a CLI application, mgrt can be used as a library should you want to
-be able to have revisions performed directly in your application. To start using
-it just import the repository into your code,
+mgrt can be used as a library for have revisions performed in code. To do this,
+first import the library,
 
-    import "github.com/andrewpillar/mgrt"
+```go
+import (
+    "github.com/andrewpillar/mgrt/v4"
+)
+```
 
-from here you will be able to start creating revisions and performing them
-against any pre-existing database connection you may have,
+Next, load in the revisions. This can be done via the [mgrt.Load][] function,
+which takes an [fs.FS][] interface and the path to load from.
 
-    // mgrt.Open will wrap sql.Open from the stdlib, and initialize the database
-    // for performing revisions.
-    db, err := mgrt.Open("sqlite3", "acme.db")
+[mgrt.Load]: https://pkg.go.dev/github.com/andrewpillar/mgrt#Load
+[fs.FS]: https://pkg.go.dev/io/fs/fs#FS
 
-    if err != nil {
-        panic(err) // maybe acceptable here
+```go
+revs, err := mgrt.Load(os.DirFS("revisions/"), ".")
+
+if err != nil {
+    // Handle error.
+}
+```
+
+Because it makes use of the [fs.FS][] interface, this means that revisions can
+be embedded directly into the code itself via [embed][].
+
+[embed]: https://pkg.go.dev/embed
+
+With the revisions now loaded, the [mgrt.Perform][] function can be called to
+peform them. This takes a database connection from [database/sql][] to perform
+the revisions against,
+
+[mgrt.Perform]: https://pkg.go.dev/github.com/andrewpillar/mgrt#Perform
+[database/sql]: https://pkg.go.dev/database/sql
+
+```go
+db, err := sql.Open(driver, dsn)
+
+if err != nil {
+    // Handle error.
+}
+
+defer db.Close()
+
+ctx := context.Background()
+
+if err := mgrt.Perform(ctx, db, nil, mgrt.Up, revs...); err != nil {
+    // Handle error.
+}
+```
+
+The [mgrt.Perform][] function takes a channel. Each revisions which is performed
+will be sent down this channel, if given to the function. This can be used to
+provide reporting on which revisions have been performed,
+
+```go
+done := make(chan *mgrt.Revision)
+
+go func() {
+    defer close(done)
+
+    if err := mgrt.Perform(ctx, db, done, mgrt.Up, revs...); err != nil {
+        // Handle error.
     }
+}()
 
-    rev := mgrt.NewRevision("Andrew", "This is being done from Go.")
-
-    if err := rev.Perform(db); err != nil {
-        if !errors.Is(err, mgrt.ErrPerformed) {
-            panic(err) // not best practice
-        }
-    }
-
-all pre-existing revisions can be retrieved via GetRevisions,
-
-    revs, err := mgrt.GetRevisions(db)
-
-    if err != nil {
-        panic(err) // don't actually do this
-    }
-
-more information about using mgrt as a library can be found in the
-[Go doc](https://pkg.go.dev/github.com/andrewpillar/mgrt) itself for mgrt.
+for rev := range done {
+    fmt.Printf("%-4s %s %s\n", rev.Direction, rev.Ref[:9], rev.Name)
+}
+```

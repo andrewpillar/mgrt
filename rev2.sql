@@ -1,0 +1,2 @@
+-- +down
+DROP TABLE IF EXISTS t;

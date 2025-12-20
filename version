@@ -1,0 +1,18 @@
+#!/bin/sh
+
+_version() {
+	git log --decorate=full --format=format:%d |
+		head -1 |
+		tr ',' '\n' |
+		grep tag: |
+		cut -d / -f 3 |
+		tr -d ',)'
+}
+
+version="$(_version)"
+
+if [ "$version" = "" ]; then
+	version="devel $(git log -n 1 --format='format: +%h %cd' HEAD)"
+fi
+
+echo "$version"

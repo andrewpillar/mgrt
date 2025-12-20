@@ -1,0 +1,4 @@
+-- +up
+CREATE TABLE IF NOT EXISTS t (
+	col VARCHAR NOT NULL
+);

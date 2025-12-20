@@ -1,0 +1,6 @@
+-- +up
+CREATE TABLE IF NOT EXISTS t (
+	col VARCHAR NOT NULL
+);
+-- +down
+DROP TABLE IF EXISTS t;
