@@ -9,6 +9,8 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
+	"vimagination.zapto.org/dos2unix"
+
 	_ "modernc.org/sqlite"
 )
 
@@ -72,7 +74,15 @@ func TestLoad(t *testing.T) {
 
 	for i, test := range tests {
 		t.Run(fmt.Sprintf("test.%d", i), func(t *testing.T) {
-			rev, err := Load(revisions, test.name)
+			f, err := revisions.Open(test.name)
+
+			if err != nil {
+				t.Fatalf("fs.ReadFile(revisions, %q): %v\n", test.name, err)
+			}
+
+			defer f.Close()
+
+			rev, err := Parse(test.name, dos2unix.DOS2Unix(f))
 
 			if err != nil {
 				t.Fatalf("Load(revisions, %q): %v\n", test.name, err)

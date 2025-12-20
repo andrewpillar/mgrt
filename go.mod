@@ -6,6 +6,7 @@ require (
 	github.com/google/go-cmp v0.6.0
 	github.com/jackc/pgx/v5 v5.7.6
 	modernc.org/sqlite v1.40.1
+	vimagination.zapto.org/dos2unix v1.0.2
 )
 
 require (
