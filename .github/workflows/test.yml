@@ -14,14 +14,9 @@ permissions:
 
 jobs:
 
-  unit:
-    strategy:
-      matrix:
-        os:
-        - ubuntu-latest
-        - macos-latest
+  test:
 
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
 
     services:
       postgres:
