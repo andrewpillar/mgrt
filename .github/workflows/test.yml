@@ -23,6 +23,7 @@ jobs:
         image: postgres
 
         env:
+          POSTGRES_HOSTNAME: postgres
           POSTGRES_DB: mgrt
           POSTGRES_USER: mgrt
           POSTGRES_PASSWORD: secret
@@ -32,9 +33,6 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-
-        ports:
-        - 5432:5432
 
     steps:
     - uses: actions/checkout@v6
