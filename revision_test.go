@@ -11,6 +11,7 @@ import (
 
 	"vimagination.zapto.org/dos2unix"
 
+	_ "github.com/jackc/pgx/v5/stdlib"
 	_ "modernc.org/sqlite"
 )
 
@@ -111,11 +112,69 @@ func DoPerform(t *testing.T, db *sql.DB, d Direction, revs ...*Revision) {
 	}
 }
 
-func TestPerform(t *testing.T) {
+func TestPerformSQLite(t *testing.T) {
 	db, err := sql.Open("sqlite", t.Name())
 
 	if err != nil {
 		t.Fatalf("sql.Open(%q, %q): %v\n", "sqlite", t.Name(), err)
+	}
+
+	defer os.Remove(t.Name())
+	defer db.Close()
+
+	revs, err := LoadDir(revisions, ".")
+
+	if err != nil {
+		t.Fatalf("LoadDir(revisions, %q): %v\n", ".", err)
+	}
+
+	ctx := t.Context()
+
+	DoPerform(t, db, Up, revs...)
+
+	performed, err := Log(ctx, db)
+
+	if err != nil {
+		t.Fatalf("Log(ctx, db): %v\n", err)
+	}
+
+	if l := len(performed); l != 2 {
+		t.Fatalf("len(performed) = %v, want = %v\n", l, 2)
+	}
+
+	if name := performed[0].Name; name != "rev1.sql" {
+		t.Fatalf("performed[0].Name = %v, want = %v\n", name, "rev1.sql")
+	}
+
+	DoPerform(t, db, Down, revs...)
+
+	performed, err = Log(ctx, db)
+
+	if err != nil {
+		t.Fatalf("Log(ctx, db): %v\n", err)
+	}
+
+	if l := len(performed); l != 4 {
+		t.Fatalf("len(performed) = %v, want = %v\n", l, 4)
+	}
+
+	if name := performed[0].Name; name != "rev0.sql" {
+		t.Fatalf("performed[0].Name = %v, want = %v\n", name, "rev0.sql")
+	}
+}
+
+func TestPerformPGX(t *testing.T) {
+	addr := os.Getenv("PG_ADDR")
+
+	if addr == "" {
+		t.Log("PG_ADDR not set, skipping...")
+		t.Skip()
+	}
+
+	db, err := sql.Open("pgx", addr)
+
+	if err != nil {
+		t.Fatalf("sql.Open(%q, %q): %v\n", "pgx", t.Name(), err)
 	}
 
 	defer os.Remove(t.Name())

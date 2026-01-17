@@ -24,6 +24,21 @@ jobs:
 
     runs-on: ${{ matrix.os }}
 
+    services:
+      postgres:
+        image: postgres
+
+        env:
+          POSTGRES_DB: mgrt
+          POSTGRES_USER: mgrt
+          POSTGRES_PASSWORD: secret
+
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
     - uses: actions/checkout@v6
     - uses: actions/setup-go@v6
@@ -33,4 +48,5 @@ jobs:
 
     - name: Run tests
       run: go test -v -coverprofile coverage ./...
-
+      env:
+        PG_ADDR: postgresql://mgrt:secret@localhost:5432/mgrt

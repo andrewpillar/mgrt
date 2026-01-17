@@ -263,7 +263,7 @@ var ErrDirectionInvalid = errors.New("revision direction invalid")
 const (
 	revisionTable  = "_mgrt_revisions"
 	revisionSchema = `CREATE TABLE IF NOT EXISTS _mgrt_revisions (
-	id           INTEGER PRIMARY KEY,
+	id           BIGINT PRIMARY KEY,
 	ref          VARCHAR,
 	name         VARCHAR NOT NULL,
 	comment      TEXT NULL,

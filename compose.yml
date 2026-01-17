@@ -1,0 +1,14 @@
+name: mgrt-testing
+
+services:
+
+  postgresql:
+    image: postgres
+
+    environment:
+      POSTGRES_DB: mgrt
+      POSTGRES_USER: mgrt
+      POSTGRES_PASSWORD: secret
+
+    ports:
+    - "127.0.0.1:5432:5432"
